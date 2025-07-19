@@ -1,0 +1,21 @@
+{
+  "name": "@token-ring/aws",
+  "version": "0.1.0",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.535.0",
+    "@aws-sdk/client-sts": "^3.535.0",
+    "@token-ring/eslint-config": "0.0.0",
+    "@token-ring/filesystem": "0.1.0",
+    "@token-ring/registry": "0.1.0",
+    "node-fetch": "^3.3.2"
+  },
+  "exports": {
+    ".": "./index.js"
+  },
+  "private": true,
+  "scripts": {
+    "lint": "eslint ",
+    "eslint": "eslint --fix ./"
+  },
+  "type": "module"
+}
