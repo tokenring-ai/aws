@@ -7,10 +7,12 @@
 		"@token-ring/eslint-config": "0.0.0",
 		"@token-ring/filesystem": "0.1.0",
 		"@token-ring/registry": "0.1.0",
-		"node-fetch": "^3.3.2"
+		"node-fetch": "^3.3.2",
+		"zod": "^3.23.8"
 	},
 	"exports": {
-		".": "./index.js"
+		".": "./index.ts",
+		"./*": "./*.ts"
 	},
 	"license": "MIT",
 	"scripts": {
