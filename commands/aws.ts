@@ -1,6 +1,8 @@
+import { Registry } from "@token-ring/registry";
+
 export const description = "AWS commands for authentication and status";
 
-export async function execute(this: any, remainder: string, _registry: any) {
+export async function execute(this: any, remainder: string, _registry: Registry) {
   const awsService = this.owner;
   const [subcommand, ..._args] = remainder.trim().split(/\s+/);
 

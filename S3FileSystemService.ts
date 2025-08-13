@@ -10,12 +10,13 @@ import {
 } from "@aws-sdk/client-s3";
 
 import { FileSystemService } from "@token-ring/filesystem";
+import {Registry} from "@token-ring/registry";
 
 interface CtorParams {
   bucketName: string;
   awsServiceInstanceName: string;
   defaultSelectedFiles?: string[];
-  registry: any;
+  registry: Registry;
 }
 
 export default class S3FileSystemService extends FileSystemService {
@@ -43,7 +44,7 @@ export default class S3FileSystemService extends FileSystemService {
 
   private bucketName: string;
   private awsServiceInstanceName: string;
-  private registry: any;
+  private registry: Registry;
   private s3Client: S3Client | null;
 
   constructor({ bucketName, awsServiceInstanceName, defaultSelectedFiles, registry }: CtorParams) {
@@ -70,10 +71,7 @@ export default class S3FileSystemService extends FileSystemService {
     if (this.s3Client) {
       return this.s3Client;
     }
-    const awsService = this.registry.getService(this.awsServiceInstanceName) as AWSService | undefined;
-    if (!awsService || !(awsService instanceof AWSService)) {
-      throw new Error(`AWSService instance '${this.awsServiceInstanceName}' not found or is not of the correct type.`);
-    }
+    const awsService = this.registry.requireFirstServiceByType(AWSService);
     this.s3Client = awsService.getS3Client();
     if (!this.s3Client) {
       throw new Error("Failed to get S3 client from AWSService.");

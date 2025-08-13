@@ -1,6 +1,6 @@
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { S3Client } from "@aws-sdk/client-s3";
-import { Service } from "@token-ring/registry";
+import {Registry, Service} from "@token-ring/registry";
 
 export interface AWSServiceParams {
   accessKeyId: string;
@@ -113,7 +113,7 @@ export default class AWSService extends Service {
   }
 
   /** Starts the AWSService. */
-  async start(_registry: any): Promise<void> {
+  async start(_registry: Registry): Promise<void> {
     console.log("AWSService starting");
     try {
       const identity = await this.getCallerIdentity();
@@ -124,12 +124,12 @@ export default class AWSService extends Service {
   }
 
   /** Stops the AWSService. */
-  async stop(_registry: any): Promise<void> {
+  async stop(_registry: Registry): Promise<void> {
     console.log("AWSService stopping");
   }
 
   /** Reports the status of the service. */
-  async status(_registry: any): Promise<{
+  async status(_registry: Registry): Promise<{
     active: boolean;
     service: string;
     authenticated: boolean;

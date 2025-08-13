@@ -1,12 +1,13 @@
 import AWSService from "../AWSService.ts";
 import { ListBucketsCommand } from "@aws-sdk/client-s3";
 import { z } from "zod";
+import {Registry} from "@token-ring/registry";
 
 export const description = "Lists all S3 buckets in the configured AWS account and region.";
 export const parameters = z.object({});
 
-export default async function execute(_args: unknown, registry: any) {
-  const awsService = registry.getService(AWSService.name) as AWSService | undefined;
+export default async function execute(_args: unknown, registry: Registry) {
+  const awsService = registry.services.getServicesByType(AWSService);
   if (!awsService) {
     return { ok: false, stderr: "AWSService not found in registry." };
   }

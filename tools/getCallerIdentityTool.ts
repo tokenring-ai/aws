@@ -1,3 +1,4 @@
+import { Registry } from "@token-ring/registry";
 import AWSService from "../AWSService.ts";
 import { z } from "zod";
 
@@ -5,11 +6,8 @@ export const description =
   "Fetches and displays the AWS caller identity (Account, ARN, UserId) using the configured credentials.";
 export const parameters = z.object({});
 
-export default async function execute(_args: unknown, registry: any) {
-  const awsService = registry.getService(AWSService.name) as AWSService | undefined;
-  if (!awsService) {
-    return { ok: false, stderr: "AWSService not found in registry." };
-  }
+export default async function execute(_args: unknown, registry: Registry) {
+  const awsService = registry.requireFirstServiceByType(AWSService);
 
   try {
     const identity = await awsService.getCallerIdentity();
