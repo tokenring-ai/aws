@@ -1,15 +1,15 @@
 import AWSService from "./AWSService.ts";
 import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-  HeadObjectCommand,
-  ListObjectsV2Command,
-  CopyObjectCommand,
+    CopyObjectCommand,
+    DeleteObjectCommand,
+    GetObjectCommand,
+    HeadObjectCommand,
+    ListObjectsV2Command,
+    PutObjectCommand,
+    S3Client,
 } from "@aws-sdk/client-s3";
 
-import { FileSystemService } from "@token-ring/filesystem";
+import {FileSystemService} from "@token-ring/filesystem";
 import {Registry} from "@token-ring/registry";
 
 interface CtorParams {
@@ -42,9 +42,9 @@ export default class S3FileSystemService extends FileSystemService {
     },
   } as const;
 
-  private bucketName: string;
+  private readonly bucketName: string;
   private awsServiceInstanceName: string;
-  private registry: Registry;
+  protected registry: Registry;
   private s3Client: S3Client | null;
 
   constructor({ bucketName, awsServiceInstanceName, defaultSelectedFiles, registry }: CtorParams) {
@@ -80,9 +80,7 @@ export default class S3FileSystemService extends FileSystemService {
   }
 
   private _s3Key(fsPath: string): string {
-    if (typeof fsPath !== "string") {
-      throw new Error("Path must be a string.");
-    }
+
     const normalizedPath = fsPath.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
     const parts = normalizedPath.split("/");
     const resultParts: string[] = [];

@@ -1,5 +1,5 @@
-import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
-import { S3Client } from "@aws-sdk/client-s3";
+import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
+import {S3Client} from "@aws-sdk/client-s3";
 import {Registry, Service} from "@token-ring/registry";
 
 export interface AWSServiceParams {
@@ -37,9 +37,9 @@ export default class AWSService extends Service {
     region: { type: "string", required: true, description: "AWS Region" },
   } as const;
 
-  private accessKeyId!: string;
-  private secretAccessKey!: string;
-  private sessionToken?: string;
+  private readonly accessKeyId!: string;
+  private readonly secretAccessKey!: string;
+  private readonly sessionToken?: string;
   public region!: string;
 
   private stsClient?: STSClient;

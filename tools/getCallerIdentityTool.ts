@@ -1,6 +1,6 @@
-import { Registry } from "@token-ring/registry";
+import {Registry} from "@token-ring/registry";
 import AWSService from "../AWSService.ts";
-import { z } from "zod";
+import {z} from "zod";
 
 export const description =
   "Fetches and displays the AWS caller identity (Account, ARN, UserId) using the configured credentials.";
