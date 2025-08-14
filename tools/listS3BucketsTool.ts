@@ -7,7 +7,7 @@ export const description = "Lists all S3 buckets in the configured AWS account a
 export const parameters = z.object({});
 
 export default async function execute(_args: string, registry: Registry) {
-  const awsService = registry.services.getServicesByType(AWSService);
+  const awsService = registry.services.getFirstServiceByType(AWSService);
   if (!awsService) {
     return { ok: false, stderr: "AWSService not found in registry." };
   }
@@ -35,8 +35,8 @@ export default async function execute(_args: string, registry: Registry) {
   } catch (error: any) {
     return {
       ok: false,
-      stderr: `Error listing S3 buckets: ${error.message}`,
-      error: error.toString(),
+      stderr: `Error listing S3 buckets: ${error instanceof Error ? error.message : String(error)}`,
+      error: String(error),
     };
   }
 }
