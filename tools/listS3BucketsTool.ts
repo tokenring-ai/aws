@@ -1,26 +1,26 @@
-import {ListBucketsCommand} from "@aws-sdk/client-s3";
-import {Registry} from "@token-ring/registry";
-import {z} from "zod";
+import { ListBucketsCommand } from "@aws-sdk/client-s3";
+import { Registry } from "@token-ring/registry";
+import { z } from "zod";
 import AWSService from "../AWSService.ts";
 
+export const name = "aws/listS3Buckets";
 export const description = "Lists all S3 buckets in the configured AWS account and region.";
 export const parameters = z.object({});
 
 /**
  * Executes the list S3 buckets tool.
  *
- * Returns either a JSON object containing the buckets array or an error object.
- * All error messages conform to the `{ error: string }` shape.
+ * Returns a JSON object containing the buckets array.
+ * Errors are thrown with a message prefixed by the tool name.
  */
-export default async function execute(_args: string, registry: Registry) {
+export async function execute(_args: any, registry: Registry) {
   const awsService = registry.services.getFirstServiceByType(AWSService);
   if (!awsService) {
-    // Return error without tool name prefix
-    return {error: "AWSService not found in registry."} as const;
+    throw new Error(`[${name}] AWSService not found in registry.`);
   }
 
   if (!awsService.isAuthenticated()) {
-    return {error: "AWS credentials not configured in AWSService."} as const;
+    throw new Error(`[${name}] AWS credentials not configured in AWSService.`);
   }
 
   try {
@@ -31,10 +31,9 @@ export default async function execute(_args: string, registry: Registry) {
       Name: bucket.Name,
       CreationDate: bucket.CreationDate,
     }));
-    // Return only the data payload
-    return {buckets} as const;
+    return { buckets } as const;
   } catch (error: any) {
     const message = error instanceof Error ? error.message : String(error);
-    return {error: `Error listing S3 buckets: ${message}`} as const;
+    throw new Error(`[${name}] Error listing S3 buckets: ${message}`);
   }
 }
