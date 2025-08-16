@@ -1,6 +1,6 @@
-import { Registry } from "@token-ring/registry";
+import {Registry} from "@token-ring/registry";
+import {z} from "zod";
 import AWSService from "../AWSService.ts";
-import { z } from "zod";
 
 export const description =
   "Fetches and displays the AWS caller identity (Account, ARN, UserId) using the configured credentials.";
@@ -20,9 +20,9 @@ export default async function execute(_args: unknown, registry: Registry) {
       Arn: identity.Arn,
       UserId: identity.UserId,
     };
-     return result;
+    return result;
   } catch (error: any) {
     // Return a standardized error object.
-    return { error: error?.message ?? String(error) } as { error: string };
+    return {error: error?.message ?? String(error)} as { error: string };
   }
 }

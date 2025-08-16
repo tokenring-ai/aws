@@ -1,16 +1,16 @@
-import AWSService from "./AWSService.ts";
 import {
-    CopyObjectCommand,
-    DeleteObjectCommand,
-    GetObjectCommand,
-    HeadObjectCommand,
-    ListObjectsV2Command,
-    PutObjectCommand,
-    S3Client,
+  CopyObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+  S3Client,
 } from "@aws-sdk/client-s3";
 
 import {FileSystemService} from "@token-ring/filesystem";
 import {Registry} from "@token-ring/registry";
+import AWSService from "./AWSService.ts";
 
 interface CtorParams {
   bucketName: string;
@@ -20,9 +20,6 @@ interface CtorParams {
 }
 
 export default class S3FileSystemService extends FileSystemService {
-  name = "S3FileSystemService";
-  description = "Provides FileSystem interface for an AWS S3 bucket";
-
   static constructorProperties = {
     bucketName: {
       type: "string",
@@ -41,14 +38,15 @@ export default class S3FileSystemService extends FileSystemService {
       default: [],
     },
   } as const;
-
+  name = "S3FileSystemService";
+  description = "Provides FileSystem interface for an AWS S3 bucket";
+  protected registry: Registry;
   private readonly bucketName: string;
   private awsServiceInstanceName: string;
-  protected registry: Registry;
   private s3Client: S3Client | null;
 
-  constructor({ bucketName, awsServiceInstanceName, defaultSelectedFiles, registry }: CtorParams) {
-    super({ defaultSelectedFiles });
+  constructor({bucketName, awsServiceInstanceName, defaultSelectedFiles, registry}: CtorParams) {
+    super({defaultSelectedFiles});
 
     if (!registry) {
       throw new Error("S3FileSystem constructor requires a 'registry' instance.");
@@ -65,36 +63,6 @@ export default class S3FileSystemService extends FileSystemService {
     this.registry = registry;
 
     this.s3Client = null;
-  }
-
-  private _getS3Client(): S3Client {
-    if (this.s3Client) {
-      return this.s3Client;
-    }
-    const awsService = this.registry.requireFirstServiceByType(AWSService);
-    this.s3Client = awsService.getS3Client();
-    if (!this.s3Client) {
-      throw new Error("Failed to get S3 client from AWSService.");
-    }
-    return this.s3Client;
-  }
-
-  private _s3Key(fsPath: string): string {
-
-    const normalizedPath = fsPath.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
-    const parts = normalizedPath.split("/");
-    const resultParts: string[] = [];
-    for (const part of parts) {
-      if (part === "..") {
-        if (resultParts.length === 0) {
-          throw new Error(`Invalid path: ${fsPath} attempts to traverse above bucket root.`);
-        }
-        resultParts.pop();
-      } else if (part !== "." && part !== "") {
-        resultParts.push(part);
-      }
-    }
-    return resultParts.join("/");
   }
 
   async writeFile(fsPath: string, content: any): Promise<boolean> {
@@ -180,7 +148,7 @@ export default class S3FileSystemService extends FileSystemService {
 
     try {
       if (!s3Key) {
-        throw { name: "NoSuchKey", $metadata: { httpStatusCode: 404 } } as any;
+        throw {name: "NoSuchKey", $metadata: {httpStatusCode: 404}} as any;
       }
       const response: any = await s3Client.send(command);
       return {
@@ -237,8 +205,11 @@ export default class S3FileSystemService extends FileSystemService {
     return true;
   }
 
-  async *getDirectoryTree(fsPath: string, params: { ig?: (p: string) => boolean; recursive?: boolean } = {}): AsyncGenerator<string> {
-    const { ig, recursive = true } = params;
+  async* getDirectoryTree(fsPath: string, params: {
+    ig?: (p: string) => boolean;
+    recursive?: boolean
+  } = {}): AsyncGenerator<string> {
+    const {ig, recursive = true} = params;
     const s3Prefix = this._s3Key(fsPath);
     const normalizedPrefix = s3Prefix === "" ? "" : s3Prefix.endsWith("/") ? s3Prefix : s3Prefix + "/";
 
@@ -330,5 +301,35 @@ export default class S3FileSystemService extends FileSystemService {
 
   async grep(_searchString: string, _options: any = {}): Promise<never> {
     throw new Error("Method grep is not supported by S3FileSystem. Consider using S3 Select for specific use cases or downloading files for local search.");
+  }
+
+  private _getS3Client(): S3Client {
+    if (this.s3Client) {
+      return this.s3Client;
+    }
+    const awsService = this.registry.requireFirstServiceByType(AWSService);
+    this.s3Client = awsService.getS3Client();
+    if (!this.s3Client) {
+      throw new Error("Failed to get S3 client from AWSService.");
+    }
+    return this.s3Client;
+  }
+
+  private _s3Key(fsPath: string): string {
+
+    const normalizedPath = fsPath.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+    const parts = normalizedPath.split("/");
+    const resultParts: string[] = [];
+    for (const part of parts) {
+      if (part === "..") {
+        if (resultParts.length === 0) {
+          throw new Error(`Invalid path: ${fsPath} attempts to traverse above bucket root.`);
+        }
+        resultParts.pop();
+      } else if (part !== "." && part !== "") {
+        resultParts.push(part);
+      }
+    }
+    return resultParts.join("/");
   }
 }

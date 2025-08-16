@@ -1,5 +1,5 @@
-import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
 import {S3Client} from "@aws-sdk/client-s3";
+import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
 import {Registry, Service} from "@token-ring/registry";
 
 export interface AWSServiceParams {
@@ -15,9 +15,6 @@ export interface AWSServiceParams {
  * Configuration is typically provided via constructor arguments defined in `constructorProperties`.
  */
 export default class AWSService extends Service {
-  name = "AWSService";
-  description = "Provides AWS functionality";
-
   static constructorProperties = {
     accessKeyId: {
       type: "string",
@@ -34,18 +31,18 @@ export default class AWSService extends Service {
       required: false,
       description: "AWS Session Token (optional)",
     },
-    region: { type: "string", required: true, description: "AWS Region" },
+    region: {type: "string", required: true, description: "AWS Region"},
   } as const;
-
+  name = "AWSService";
+  description = "Provides AWS functionality";
+  public region!: string;
   private readonly accessKeyId!: string;
   private readonly secretAccessKey!: string;
   private readonly sessionToken?: string;
-  public region!: string;
-
   private stsClient?: STSClient;
   private s3Client?: S3Client;
 
-  constructor({ accessKeyId, secretAccessKey, sessionToken, region }: AWSServiceParams) {
+  constructor({accessKeyId, secretAccessKey, sessionToken, region}: AWSServiceParams) {
     super();
     this.accessKeyId = accessKeyId;
     this.secretAccessKey = secretAccessKey;

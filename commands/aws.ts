@@ -1,12 +1,12 @@
+import {ChatService} from "@token-ring/chat";
 import {Registry} from "@token-ring/registry";
 import AWSService from "../AWSService.js";
-import {ChatService} from "@token-ring/chat";
 
 export const description = "AWS commands for authentication and status";
 
 export async function execute(remainder: string, registry: Registry) {
   const awsService = registry.requireFirstServiceByType(AWSService);
-  const chatService =  registry.requireFirstServiceByType(ChatService);
+  const chatService = registry.requireFirstServiceByType(ChatService);
   const [subcommand, ..._args] = remainder.trim().split(/\s+/);
 
   if (subcommand === "status") {
@@ -22,9 +22,9 @@ export async function execute(remainder: string, registry: Registry) {
       chatService.systemLine("Please ensure AWS credentials and region are correctly configured in the AWSService.");
     }
   } else {
-      for (const line of help()) {
-          chatService.systemLine(line);
-      }
+    for (const line of help()) {
+      chatService.systemLine(line);
+    }
   }
 }
 
