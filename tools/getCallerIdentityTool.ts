@@ -1,11 +1,15 @@
-import {Registry} from "@token-ring/registry";
+import { Registry } from "@token-ring/registry";
 import AWSService from "../AWSService.ts";
-import {z} from "zod";
+import { z } from "zod";
 
 export const description =
   "Fetches and displays the AWS caller identity (Account, ARN, UserId) using the configured credentials.";
 export const parameters = z.object({});
 
+/**
+ * Executes the GetCallerIdentity tool.
+ * Returns the caller identity object on success, or an error object on failure.
+ */
 export default async function execute(_args: unknown, registry: Registry) {
   const awsService = registry.requireFirstServiceByType(AWSService);
 
@@ -16,12 +20,9 @@ export default async function execute(_args: unknown, registry: Registry) {
       Arn: identity.Arn,
       UserId: identity.UserId,
     };
-    return { ok: true, stdout: JSON.stringify(result, null, 2), data: result };
+     return result;
   } catch (error: any) {
-    return {
-      ok: false,
-      stderr: `Error getting caller identity: ${error.message}`,
-      error: error.toString(),
-    };
+    // Return a standardized error object.
+    return { error: error?.message ?? String(error) } as { error: string };
   }
 }
