@@ -53,14 +53,12 @@ export default class AWSService extends Service {
   /**
    * Initializes a generic AWS SDK client.
    */
-  initializeAWSClient<T>(ClientClass: new (config: any) => T, clientConfig: Record<string, any> = {}): T {
-    const credentials: any = {
+  initializeAWSClient<T>(ClientClass: new (config: { region: string; credentials: { accessKeyId: string; secretAccessKey: string; sessionToken?: string } } & Record<string, unknown>) => T, clientConfig: Record<string, unknown> = {}): T {
+    const credentials = {
       accessKeyId: this.accessKeyId,
       secretAccessKey: this.secretAccessKey,
+      ...(this.sessionToken ? { sessionToken: this.sessionToken } : {}),
     };
-    if (this.sessionToken) {
-      credentials.sessionToken = this.sessionToken;
-    }
     return new ClientClass({
       region: this.region,
       credentials,

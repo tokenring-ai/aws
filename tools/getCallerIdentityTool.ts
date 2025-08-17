@@ -15,15 +15,10 @@ export const parameters = z.object({});
 export async function execute(_args: unknown, registry: Registry) {
   const awsService = registry.requireFirstServiceByType(AWSService);
 
-  try {
-    const identity = await awsService.getCallerIdentity();
-    return {
-      Account: identity.Account,
-      Arn: identity.Arn,
-      UserId: identity.UserId,
-    };
-  } catch (error: any) {
-    // Throw a standardized error instead of returning an error object.
-    throw new Error(`[${name}] ${error?.message ?? String(error)}`);
-  }
+  const identity = await awsService.getCallerIdentity();
+  return {
+    Account: identity.Account,
+    Arn: identity.Arn,
+    UserId: identity.UserId,
+  };
 }

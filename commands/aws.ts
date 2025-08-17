@@ -17,8 +17,8 @@ export async function execute(remainder: string, registry: Registry) {
       chatService.systemLine(`  Arn: ${identity.Arn}`);
       chatService.systemLine(`  UserId: ${identity.UserId}`);
       chatService.systemLine(`  Region: ${awsService.region}`);
-    } catch (error: any) {
-      console.error("Failed to get AWS caller identity:", error.message);
+    } catch (error: unknown) {
+        chatService.errorLine("Failed to get AWS caller identity:", error);
       chatService.systemLine("Please ensure AWS credentials and region are correctly configured in the AWSService.");
     }
   } else {
