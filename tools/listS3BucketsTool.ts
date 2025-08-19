@@ -1,11 +1,11 @@
-import { ListBucketsCommand } from "@aws-sdk/client-s3";
-import { Registry } from "@token-ring/registry";
-import { z } from "zod";
+import {ListBucketsCommand} from "@aws-sdk/client-s3";
+import {Registry} from "@token-ring/registry";
+import {z} from "zod";
 import AWSService from "../AWSService.ts";
 
 export const name = "aws/listS3Buckets";
 export const description = "Lists all S3 buckets in the configured AWS account and region.";
-export const parameters = z.object({});
+export const inputSchema = z.object({});
 
 /**
  * Executes the list S3 buckets tool.
@@ -31,7 +31,7 @@ export async function execute(_args: any, registry: Registry) {
       Name: bucket.Name,
       CreationDate: bucket.CreationDate,
     }));
-    return { buckets } as const;
+    return {buckets} as const;
   } catch (error: any) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`[${name}] Error listing S3 buckets: ${message}`);

@@ -18,7 +18,7 @@ export async function execute(remainder: string, registry: Registry) {
       chatService.systemLine(`  UserId: ${identity.UserId}`);
       chatService.systemLine(`  Region: ${awsService.region}`);
     } catch (error: unknown) {
-        chatService.errorLine("Failed to get AWS caller identity:", error);
+      chatService.errorLine("Failed to get AWS caller identity:", error);
       chatService.systemLine("Please ensure AWS credentials and region are correctly configured in the AWSService.");
     }
   } else {
@@ -28,6 +28,7 @@ export async function execute(remainder: string, registry: Registry) {
   }
 }
 
+// noinspection JSUnusedGlobalSymbols
 export function help() {
   return [
     "aws status   # View current AWS authentication status and account information.",
