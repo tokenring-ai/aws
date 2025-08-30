@@ -2,7 +2,7 @@ import {S3Client} from "@aws-sdk/client-s3";
 import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
 import {Registry, Service} from "@token-ring/registry";
 
-export interface AWSServiceParams {
+export interface AWSCredentials {
   accessKeyId: string;
   secretAccessKey: string;
   sessionToken?: string;
@@ -42,7 +42,7 @@ export default class AWSService extends Service {
   private stsClient?: STSClient;
   private s3Client?: S3Client;
 
-  constructor({accessKeyId, secretAccessKey, sessionToken, region}: AWSServiceParams) {
+  constructor({accessKeyId, secretAccessKey, sessionToken, region}: AWSCredentials) {
     super();
     this.accessKeyId = accessKeyId;
     this.secretAccessKey = secretAccessKey;
