@@ -1,5 +1,5 @@
 import {ListBucketsCommand} from "@aws-sdk/client-s3";
-import {Registry} from "@token-ring/registry";
+import Agent from "@tokenring-ai/agent/Agent";
 import {z} from "zod";
 import AWSService from "../AWSService.ts";
 
@@ -13,11 +13,8 @@ export const inputSchema = z.object({});
  * Returns a JSON object containing the buckets array.
  * Errors are thrown with a message prefixed by the tool name.
  */
-export async function execute(_args: any, registry: Registry) {
-  const awsService = registry.services.getFirstServiceByType(AWSService);
-  if (!awsService) {
-    throw new Error(`[${name}] AWSService not found in registry.`);
-  }
+export async function execute(_args: any, agent: Agent) {
+  const awsService = agent.requireFirstServiceByType(AWSService);
 
   if (!awsService.isAuthenticated()) {
     throw new Error(`[${name}] AWS credentials not configured in AWSService.`);

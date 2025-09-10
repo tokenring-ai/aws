@@ -1,11 +1,11 @@
 {
- "name": "@token-ring/aws",
+ "name": "@tokenring-ai/aws",
+ "description": "AWS integration providing authentication status and S3 interaction",
  "version": "0.1.0",
  "dependencies": {
   "@aws-sdk/client-s3": "^3.864.0",
   "@aws-sdk/client-sts": "^3.864.0",
-  "@token-ring/filesystem": "0.1.0",
-  "@token-ring/registry": "0.1.0",
+  "@tokenring-ai/filesystem": "0.1.0",
   "node-fetch": "^3.3.2",
   "zod": "^4.0.17"
  },

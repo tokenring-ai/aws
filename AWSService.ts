@@ -1,6 +1,8 @@
 import {S3Client} from "@aws-sdk/client-s3";
 import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
-import {Registry, Service} from "@token-ring/registry";
+import {AgentTeam} from "@tokenring-ai/agent";
+import Agent from "@tokenring-ai/agent/Agent";
+import {TokenRingService} from "@tokenring-ai/agent/types";
 
 export interface AWSCredentials {
   accessKeyId: string;
@@ -14,7 +16,7 @@ export interface AWSCredentials {
  * It handles AWS client initialization and basic authentication checks.
  * Configuration is typically provided via constructor arguments defined in `constructorProperties`.
  */
-export default class AWSService extends Service {
+export default class AWSService implements TokenRingService {
   static constructorProperties = {
     accessKeyId: {
       type: "string",
@@ -43,7 +45,6 @@ export default class AWSService extends Service {
   private s3Client?: S3Client;
 
   constructor({accessKeyId, secretAccessKey, sessionToken, region}: AWSCredentials) {
-    super();
     this.accessKeyId = accessKeyId;
     this.secretAccessKey = secretAccessKey;
     this.sessionToken = sessionToken;
@@ -111,7 +112,7 @@ export default class AWSService extends Service {
   }
 
   /** Starts the AWSService. */
-  async start(_registry: Registry): Promise<void> {
+  async start(_agentTeam: AgentTeam): Promise<void> {
     console.log("AWSService starting");
     try {
       const identity = await this.getCallerIdentity();
@@ -122,12 +123,12 @@ export default class AWSService extends Service {
   }
 
   /** Stops the AWSService. */
-  async stop(_registry: Registry): Promise<void> {
+  async stop(_agentTeam: AgentTeam): Promise<void> {
     console.log("AWSService stopping");
   }
 
   /** Reports the status of the service. */
-  async status(_registry: Registry): Promise<{
+  async status(_agent: Agent): Promise<{
     active: boolean;
     service: string;
     authenticated: boolean;

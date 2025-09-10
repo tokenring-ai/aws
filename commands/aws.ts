@@ -1,29 +1,27 @@
-import {ChatService} from "@token-ring/chat";
-import {Registry} from "@token-ring/registry";
+import Agent from "@tokenring-ai/agent/Agent";
 import AWSService from "../AWSService.js";
 
 export const description = "AWS commands for authentication and status";
 
-export async function execute(remainder: string, registry: Registry) {
-  const awsService = registry.requireFirstServiceByType(AWSService);
-  const chatService = registry.requireFirstServiceByType(ChatService);
+export async function execute(remainder: string, agent: Agent) {
+  const awsService = agent.requireFirstServiceByType(AWSService);
   const [subcommand, ..._args] = remainder.trim().split(/\s+/);
 
   if (subcommand === "status") {
     try {
       const identity = await awsService.getCallerIdentity();
-      chatService.systemLine("AWS Authentication Status:");
-      chatService.systemLine(`  Account: ${identity.Account}`);
-      chatService.systemLine(`  Arn: ${identity.Arn}`);
-      chatService.systemLine(`  UserId: ${identity.UserId}`);
-      chatService.systemLine(`  Region: ${awsService.region}`);
+      agent.infoLine("AWS Authentication Status:");
+      agent.infoLine(`  Account: ${identity.Account}`);
+      agent.infoLine(`  Arn: ${identity.Arn}`);
+      agent.infoLine(`  UserId: ${identity.UserId}`);
+      agent.infoLine(`  Region: ${awsService.region}`);
     } catch (error: unknown) {
-      chatService.errorLine("Failed to get AWS caller identity:", error);
-      chatService.systemLine("Please ensure AWS credentials and region are correctly configured in the AWSService.");
+      agent.errorLine("Failed to get AWS caller identity:", error as Error);
+      agent.infoLine("Please ensure AWS credentials and region are correctly configured in the AWSService.");
     }
   } else {
     for (const line of help()) {
-      chatService.systemLine(line);
+      agent.infoLine(line);
     }
   }
 }

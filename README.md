@@ -1,4 +1,4 @@
-# @token-ring/aws
+# @tokenring-ai/aws
 
 AWS integration package for Token Ring. It provides:
 
@@ -16,8 +16,8 @@ package.json and the AWS SDK v3:
 
 - @aws-sdk/client-sts
 - @aws-sdk/client-s3
-- @token-ring/registry
-- @token-ring/filesystem
+- @tokenring-ai/registry
+- @tokenring-ai/filesystem
 - zod
 
 ## Exports
@@ -51,8 +51,8 @@ Key methods:
 Example usage with the Service Registry:
 
 ```ts
-import {ServiceRegistry} from "@token-ring/registry";
-import {AWSService} from "@token-ring/aws";
+import {ServiceRegistry} from "@tokenring-ai/registry";
+import {AWSService} from "@tokenring-ai/aws";
 
 const registry = new ServiceRegistry();
 
@@ -101,8 +101,8 @@ Not supported (will throw):
 Example:
 
 ```ts
-import {ServiceRegistry} from "@token-ring/registry";
-import {AWSService, S3FileSystemService} from "@token-ring/aws";
+import {ServiceRegistry} from "@tokenring-ai/registry";
+import {AWSService, S3FileSystemService} from "@tokenring-ai/aws";
 
 const registry = new ServiceRegistry();
 const aws = new AWSService({
@@ -135,8 +135,8 @@ This package exposes two tools via pkg/aws/tools.ts:
 Tools are designed to run within a ServiceRegistry context. Example pseudo-usage:
 
 ```ts
-import {tools, AWSService} from "@token-ring/aws";
-import {ServiceRegistry} from "@token-ring/registry";
+import {tools, AWSService} from "@tokenring-ai/aws";
+import {ServiceRegistry} from "@tokenring-ai/registry";
 
 const registry = new ServiceRegistry();
 registry.registerService(new AWSService({
