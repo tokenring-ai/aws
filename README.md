@@ -1,175 +1,191 @@
-# @tokenring-ai/aws
+# AWS Package Documentation
 
-AWS integration package for Token Ring. It provides:
+## Overview
 
-- AWSService: a service that initializes AWS SDK v3 clients, validates credentials/region, and exposes helper methods
-  like getCallerIdentity and getS3Client.
-- S3FileSystemService: an implementation of the FileSystemService interface backed by an S3 bucket, enabling
-  read/write/list/stat operations via the familiar file-system-like API.
-- Tools for orchestration and automation: getCallerIdentity and listS3Buckets.
-- A chat command aws status to quickly view authentication status in interactive environments.
+The `@tokenring-ai/aws` package provides AWS integration for TokenRing AI agents. It enables authentication with AWS services using STS (Security Token Service) and basic interaction with S3, such as listing buckets. The package is designed as a `TokenRingService` that can be injected into agents, supporting startup authentication checks, status reporting, and tools/commands for agent workflows. It focuses on secure credential handling and client initialization for AWS SDK v3.
 
-## Installation
+This package is part of the larger TokenRing AI ecosystem, allowing agents to perform AWS operations like querying account identity and managing S3 resources.
 
-This package is part of the Token Ring monorepo. If you use it externally, install the peer packages shown in
-package.json and the AWS SDK v3:
+## Installation/Setup
 
-- @aws-sdk/client-sts
-- @aws-sdk/client-s3
-- @tokenring-ai/registry
-- @tokenring-ai/filesystem
-- zod
+1. Ensure you have Node.js (v18+) and npm installed.
+2. Install the package as a dependency in your TokenRing AI project:
+   ```
+   npm install @tokenring-ai/aws
+   ```
+3. Configure AWS credentials (Access Key ID, Secret Access Key, optional Session Token, and Region) when instantiating the `AWSService`. These can be provided via environment variables or directly in the service configuration.
+4. Import and register the service in your agent team setup, e.g.:
+   ```typescript
+   import AWSService from '@tokenring-ai/aws';
+   // In agent team configuration
+   const awsService = new AWSService({
+     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+     region: process.env.AWS_REGION || 'us-east-1'
+   });
+   agentTeam.addService(awsService);
+   ```
+5. The service will authenticate on startup by calling `getCallerIdentity()`.
 
-## Exports
+## Package Structure
 
-- AWSService (default export)
-- S3FileSystemService (default export)
-- tools: getCallerIdentity, listS3Buckets
-- chatCommands: aws
+The package follows a modular TypeScript structure:
 
-See pkg/aws/index.ts for the full export surface.
+- **index.ts**: Entry point exporting the `AWSService` and package metadata (`TokenRingPackage`) including tools and chat commands.
+- **AWSService.ts**: Core service class implementing `TokenRingService` for AWS client management and authentication.
+- **tools.ts**: Exports available tools (e.g., S3 bucket listing).
+- **tools/listS3BucketsTool.ts**: Specific tool for listing S3 buckets.
+- **chatCommands.ts**: Exports chat commands for AWS interactions.
+- **commands/aws.ts**: Implementation of AWS-related chat commands (e.g., status check).
+- **package.json**: Defines dependencies, exports, and scripts.
+- **tsconfig.json**: TypeScript configuration.
+- **LICENSE**: MIT license file.
 
-## AWSService
+Directories:
+- `tools/`: Agent tools for AWS operations.
+- `commands/`: Chat command implementations.
 
-A registry-managed service that configures AWS clients and exposes identity/status helpers.
+## Core Components
 
-Constructor parameters (all required except sessionToken):
+### AWSService
 
-- accessKeyId: string
-- secretAccessKey: string
-- sessionToken?: string
-- region: string
+The main class that handles AWS SDK clients and authentication.
 
-Key methods:
+- **Description**: Initializes STS and S3 clients with provided credentials. Performs authentication checks and provides identity information. Implements `TokenRingService` lifecycle methods (`start`, `stop`, `status`).
 
-- isAuthenticated(): boolean — basic check for configured credentials/region.
-- getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: string }>
-- getS3Client(): S3Client — lazily constructed AWS SDK v3 S3 client.
-- status(): reports whether authenticated and, if possible, the current caller identity.
-- start()/stop(): lifecycle hooks that attempt to verify credentials on start.
+- **Key Methods**:
+  - `constructor(credentials: AWSCredentials)`: Initializes with `accessKeyId`, `secretAccessKey`, optional `sessionToken`, and `region`.
+  - `initializeAWSClient<T>(ClientClass, clientConfig?)`: Generic method to create AWS SDK clients.
+    - Parameters: `ClientClass` (constructor), `clientConfig` (optional config object).
+    - Returns: Initialized client instance.
+  - `getSTSClient()`: Returns or creates STS client.
+    - Returns: `STSClient`.
+  - `getS3Client()`: Returns or creates S3 client.
+    - Returns: `S3Client`.
+  - `isAuthenticated()`: Checks if credentials and region are set.
+    - Returns: `boolean`.
+  - `getCallerIdentity()`: Retrieves AWS account details via STS.
+    - Returns: Promise<{ Arn?: string; Account?: string; UserId?: string }>.
+    - Throws: Error if not authenticated or API fails.
+  - `start(agentTeam: AgentTeam)`: Starts the service, logs authentication status.
+    - Returns: Promise<void>.
+  - `stop(agentTeam: AgentTeam)`: Stops the service (logs only).
+    - Returns: Promise<void>.
+  - `status(agent: Agent)`: Reports service status including authentication and account info.
+    - Returns: Promise<{ active: boolean; service: string; authenticated: boolean; accountInfo?; error? }>.
 
-Example usage with the Service Registry:
+- **Interactions**: Used by tools and commands to access AWS clients. Agents require this service via `agent.requireFirstServiceByType(AWSService)`.
 
-```ts
-import {ServiceRegistry} from "@tokenring-ai/registry";
-import {AWSService} from "@tokenring-ai/aws";
+### Tools: listS3Buckets
 
-const registry = new ServiceRegistry();
+- **Description**: A tool for agents to list all S3 buckets in the configured account and region.
 
-registry.registerService(
-  new AWSService({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-    sessionToken: process.env.AWS_SESSION_TOKEN, // optional
-    region: process.env.AWS_REGION || "us-east-1",
-  })
-);
+- **Key Functions**:
+  - `execute(args: any, agent: Agent)`: Runs the tool.
+    - Requires: AWSService instance.
+    - Returns: Promise<{ buckets: Array<{ Name: string; CreationDate: string }> }>.
+    - Throws: Error if not authenticated or S3 API fails.
+  - Input Schema: `z.object({})` (no parameters).
 
-await registry.startAll();
+### Chat Commands: aws
 
-const aws = registry.requireFirstServiceByType(AWSService);
-const identity = await aws.getCallerIdentity();
-console.log(identity);
-```
+- **Description**: Provides chat-based commands for AWS status checks within the agent interface.
 
-## S3FileSystemService
+- **Key Functions**:
+  - `execute(remainder: string, agent: Agent)`: Parses subcommands like `status`.
+    - For `status`: Displays account, ARN, UserId, and region.
+    - Returns: void (logs to agent).
+  - `help()`: Returns help text array, e.g., "aws status # View current AWS authentication status...".
 
-Adapts an S3 bucket to the Token Ring FileSystemService interface.
+## Usage Examples
 
-Constructor parameters:
+### 1. Basic Service Setup and Authentication
+```typescript
+import AWSService from '@tokenring-ai/aws';
+import { AgentTeam } from '@tokenring-ai/agent';
 
-- bucketName: string
-- awsServiceInstanceName: string (name of the configured AWSService instance in the registry)
-- defaultSelectedFiles?: string[]
-- registry: ServiceRegistry
-
-Supported operations:
-
-- writeFile(path, content)
-- getFile(path)
-- deleteFile(path)
-- exists(path)
-- stat(path): detects file vs. directory-like prefix
-- copy(sourcePath, destinationPath)
-- getDirectoryTree(prefix, { ig?, recursive? }): async iterator over keys under a prefix
-- createDirectory(path): creates a folder placeholder object ("path/") if needed
-
-Not supported (will throw):
-
-- chown, chmod, rename, watch, executeCommand, borrowFile, glob, grep
-
-Example:
-
-```ts
-import {ServiceRegistry} from "@tokenring-ai/registry";
-import {AWSService, S3FileSystemService} from "@tokenring-ai/aws";
-
-const registry = new ServiceRegistry();
-const aws = new AWSService({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  region: process.env.AWS_REGION || "us-east-1",
+const awsService = new AWSService({
+  accessKeyId: 'your-access-key',
+  secretAccessKey: 'your-secret-key',
+  region: 'us-east-1'
 });
-registry.registerService(aws);
 
-const s3fs = new S3FileSystemService({
-  bucketName: "my-bucket",
-  awsServiceInstanceName: aws.name,
-  registry,
-});
-registry.registerService(s3fs);
+const agentTeam = new AgentTeam(/* ... */);
+agentTeam.addService(awsService);
 
-await s3fs.writeFile("folder/example.txt", "hello from token ring");
-console.log(await s3fs.getFile("folder/example.txt"));
-console.log(await s3fs.exists("folder/example.txt"));
-console.log(await s3fs.stat("folder"));
+await awsService.start(agentTeam); // Logs successful authentication
+const identity = await awsService.getCallerIdentity();
+console.log(`Account: ${identity.Account}`);
 ```
 
-## Tools
+### 2. Using the listS3Buckets Tool in an Agent
+```typescript
+import Agent from '@tokenring-ai/agent';
+import { execute as listS3Buckets } from '@tokenring-ai/aws/tools/listS3BucketsTool';
 
-This package exposes two tools via pkg/aws/tools.ts:
-
-- getCallerIdentity: Returns the STS caller identity.
-- listS3Buckets: Lists S3 buckets available to the configured credentials.
-
-Tools are designed to run within a ServiceRegistry context. Example pseudo-usage:
-
-```ts
-import {tools, AWSService} from "@tokenring-ai/aws";
-import {ServiceRegistry} from "@tokenring-ai/registry";
-
-const registry = new ServiceRegistry();
-registry.registerService(new AWSService({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  region: process.env.AWS_REGION || "us-east-1",
-}));
-
-const caller = await tools.getCallerIdentity.default({}, registry);
-console.log(caller);
-
-const buckets = await tools.listS3Buckets.default({}, registry);
-console.log(buckets);
+const agent = new Agent(/* ... */);
+const result = await listS3Buckets({}, agent);
+console.log(result.buckets); // Array of bucket objects
 ```
 
-## Chat command
+### 3. Chat Command for Status
+In an agent chat session:
+```
+> aws status
+AWS Authentication Status:
+  Account: 123456789012
+  Arn: arn:aws:iam::123456789012:user/example
+  UserId: AIDAEXAMPLEUSER
+  Region: us-east-1
+```
 
-- aws status: Prints the current caller identity and region. This requires an AWSService instance to be registered.
+## Configuration Options
 
-## Authentication and permissions
+- **AWSCredentials Interface**:
+  - `accessKeyId` (string, required): AWS Access Key ID.
+  - `secretAccessKey` (string, required): AWS Secret Access Key.
+  - `sessionToken` (string, optional): For temporary credentials (e.g., from STS AssumeRole).
+  - `region` (string, required): AWS region (e.g., 'us-east-1').
 
-Ensure the configured credentials have appropriate IAM permissions:
+- Environment Variables: Recommended for production (e.g., `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`).
 
-- STS: GetCallerIdentity
-- S3: ListBuckets (for listS3Buckets), and relevant S3 object permissions (GetObject, PutObject, DeleteObject,
-  HeadObject, ListBucket) for S3FileSystemService.
+- Service Properties: Defined in `AWSService.constructorProperties` for schema validation (using Zod-like types).
 
-## Notes
+No additional configs; clients use default AWS SDK settings unless overridden in `initializeAWSClient`.
 
-- Path handling normalizes slashes and prevents traversing above the bucket root.
-- S3 is an object store; some traditional file-system operations are not supported and intentionally throw.
-- Errors from AWS SDK are propagated; handle them as needed.
+## API Reference
 
-## License
+- **AWSService**:
+  - `new AWSService(credentials: AWSCredentials)`
+  - `getSTSClient(): STSClient`
+  - `getS3Client(): S3Client`
+  - `getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: string }>`
 
-MIT License. See LICENSE at repo root.
+- **Tools**:
+  - `aws/listS3Buckets.execute(args: {}, agent: Agent): Promise<{ buckets: Array<{ Name: string; CreationDate: string }> }>`
+
+- **Chat Commands**:
+  - `aws status`: Displays authentication status.
+
+- **Exports**:
+  - `AWSService` (default)
+  - `packageInfo: TokenRingPackage` (with `chatCommands` and `tools`)
+
+## Dependencies
+
+- `@aws-sdk/client-s3@^3.864.0`: For S3 operations.
+- `@aws-sdk/client-sts@^3.864.0`: For authentication checks.
+- `@tokenring-ai/agent`: Core agent framework (for services, tools, commands).
+- `@tokenring-ai/filesystem@0.1.0`: File system utilities (unused in core but declared).
+- `node-fetch@^3.3.2`: HTTP client (for potential AWS calls).
+- `zod@^4.0.17`: Schema validation for tool inputs.
+
+## Contributing/Notes
+
+- **Testing**: Run `npm run eslint` for linting. Unit tests for AWSService and tools are recommended but not included.
+- **Building**: Use TypeScript compilation (`tsc`) via tsconfig.json.
+- **Limitations**: Currently supports only STS identity and S3 listing. Expand by adding more clients/tools (e.g., EC2, Lambda).
+- **Security**: Never hardcode credentials; use IAM roles or environment variables. The package does not handle credential rotation.
+- **License**: MIT.
+
+For contributions, fork the repo, add features (e.g., new tools), and submit PRs. Ensure compatibility with TokenRing AI agent lifecycle.
