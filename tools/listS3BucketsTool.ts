@@ -14,7 +14,7 @@ export const inputSchema = z.object({});
  * Errors are thrown with a message prefixed by the tool name.
  */
 export async function execute(_args: any, agent: Agent) {
-  const awsService = agent.requireFirstServiceByType(AWSService);
+  const awsService = agent.requireServiceByType(AWSService);
 
   if (!awsService.isAuthenticated()) {
     throw new Error(`[${name}] AWS credentials not configured in AWSService.`);

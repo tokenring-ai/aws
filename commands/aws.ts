@@ -4,7 +4,7 @@ import AWSService from "../AWSService.js";
 export const description = "AWS commands for authentication and status";
 
 export async function execute(remainder: string, agent: Agent) {
-  const awsService = agent.requireFirstServiceByType(AWSService);
+  const awsService = agent.requireServiceByType(AWSService);
   const [subcommand, ..._args] = remainder.trim().split(/\s+/);
 
   if (subcommand === "status") {
