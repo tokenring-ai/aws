@@ -7,18 +7,18 @@ import * as tools from "./tools.ts";
 
 export const AWSConfigSchema = z.any().optional();
 
-export const packageInfo: TokenRingPackage = {
+export default {
   name: packageJSON.name,
   version: packageJSON.version,
   description: packageJSON.description,
   install(agentTeam: AgentTeam) {
     const config = agentTeam.getConfigSlice('aws', AWSConfigSchema);
     if (config) {
-      agentTeam.addTools(packageInfo, tools);
+      agentTeam.addTools(packageJSON.name, tools);
       agentTeam.addChatCommands(chatCommands);
       agentTeam.addServices(new AWSService(config));
     }
   }
-};
+} as TokenRingPackage;
 
 export {default as AWSService} from "./AWSService.ts";
