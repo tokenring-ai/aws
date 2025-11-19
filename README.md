@@ -2,9 +2,14 @@
 
 ## Overview
 
-The `@tokenring-ai/aws` package provides AWS integration for TokenRing AI agents. It enables authentication with AWS services using STS (Security Token Service) and basic interaction with S3, such as listing buckets. The package is designed as a `TokenRingService` that can be injected into agents, supporting startup authentication checks, status reporting, and tools/commands for agent workflows. It focuses on secure credential handling and client initialization for AWS SDK v3.
+The `@tokenring-ai/aws` package provides AWS integration for TokenRing AI agents. It enables authentication with AWS
+services using STS (Security Token Service) and basic interaction with S3, such as listing buckets. The package is
+designed as a `TokenRingService` that can be injected into agents, supporting startup authentication checks, status
+reporting, and tools/commands for agent workflows. It focuses on secure credential handling and client initialization
+for AWS SDK v3.
 
-This package is part of the larger TokenRing AI ecosystem, allowing agents to perform AWS operations like querying account identity and managing S3 resources.
+This package is part of the larger TokenRing AI ecosystem, allowing agents to perform AWS operations like querying
+account identity and managing S3 resources.
 
 ## Installation/Setup
 
@@ -13,7 +18,8 @@ This package is part of the larger TokenRing AI ecosystem, allowing agents to pe
    ```
    npm install @tokenring-ai/aws
    ```
-3. Configure AWS credentials (Access Key ID, Secret Access Key, optional Session Token, and Region) when instantiating the `AWSService`. These can be provided via environment variables or directly in the service configuration.
+3. Configure AWS credentials (Access Key ID, Secret Access Key, optional Session Token, and Region) when instantiating
+   the `AWSService`. These can be provided via environment variables or directly in the service configuration.
 4. Import and register the service in your agent team setup, e.g.:
    ```typescript
    import AWSService from '@tokenring-ai/aws';
@@ -31,7 +37,8 @@ This package is part of the larger TokenRing AI ecosystem, allowing agents to pe
 
 The package follows a modular TypeScript structure:
 
-- **index.ts**: Entry point exporting the `AWSService` and package metadata (`TokenRingPackage`) including tools and chat commands.
+- **index.ts**: Entry point exporting the `AWSService` and package metadata (`TokenRingPackage`) including tools and
+  chat commands.
 - **AWSService.ts**: Core service class implementing `TokenRingService` for AWS client management and authentication.
 - **tools.ts**: Exports available tools (e.g., S3 bucket listing).
 - **tools/listS3BucketsTool.ts**: Specific tool for listing S3 buckets.
@@ -42,6 +49,7 @@ The package follows a modular TypeScript structure:
 - **LICENSE**: MIT license file.
 
 Directories:
+
 - `tools/`: Agent tools for AWS operations.
 - `commands/`: Chat command implementations.
 
@@ -51,55 +59,59 @@ Directories:
 
 The main class that handles AWS SDK clients and authentication.
 
-- **Description**: Initializes STS and S3 clients with provided credentials. Performs authentication checks and provides identity information. Implements `TokenRingService` lifecycle methods (`start`, `stop`, `status`).
+- **Description**: Initializes STS and S3 clients with provided credentials. Performs authentication checks and provides
+  identity information. Implements `TokenRingService` lifecycle methods (`start`, `stop`, `status`).
 
 - **Key Methods**:
-  - `constructor(credentials: AWSCredentials)`: Initializes with `accessKeyId`, `secretAccessKey`, optional `sessionToken`, and `region`.
-  - `initializeAWSClient<T>(ClientClass, clientConfig?)`: Generic method to create AWS SDK clients.
-    - Parameters: `ClientClass` (constructor), `clientConfig` (optional config object).
-    - Returns: Initialized client instance.
-  - `getSTSClient()`: Returns or creates STS client.
-    - Returns: `STSClient`.
-  - `getS3Client()`: Returns or creates S3 client.
-    - Returns: `S3Client`.
-  - `isAuthenticated()`: Checks if credentials and region are set.
-    - Returns: `boolean`.
-  - `getCallerIdentity()`: Retrieves AWS account details via STS.
-    - Returns: Promise<{ Arn?: string; Account?: string; UserId?: string }>.
-    - Throws: Error if not authenticated or API fails.
-  - `start(agentTeam: AgentTeam)`: Starts the service, logs authentication status.
-    - Returns: Promise<void>.
-  - `stop(agentTeam: AgentTeam)`: Stops the service (logs only).
-    - Returns: Promise<void>.
-  - `status(agent: Agent)`: Reports service status including authentication and account info.
-    - Returns: Promise<{ active: boolean; service: string; authenticated: boolean; accountInfo?; error? }>.
+ - `constructor(credentials: AWSCredentials)`: Initializes with `accessKeyId`, `secretAccessKey`, optional
+   `sessionToken`, and `region`.
+ - `initializeAWSClient<T>(ClientClass, clientConfig?)`: Generic method to create AWS SDK clients.
+  - Parameters: `ClientClass` (constructor), `clientConfig` (optional config object).
+  - Returns: Initialized client instance.
+ - `getSTSClient()`: Returns or creates STS client.
+  - Returns: `STSClient`.
+ - `getS3Client()`: Returns or creates S3 client.
+  - Returns: `S3Client`.
+ - `isAuthenticated()`: Checks if credentials and region are set.
+  - Returns: `boolean`.
+ - `getCallerIdentity()`: Retrieves AWS account details via STS.
+  - Returns: Promise<{ Arn?: string; Account?: string; UserId?: string }>.
+  - Throws: Error if not authenticated or API fails.
+ - `start(agentTeam: AgentTeam)`: Starts the service, logs authentication status.
+  - Returns: Promise<void>.
+ - `stop(agentTeam: AgentTeam)`: Stops the service (logs only).
+  - Returns: Promise<void>.
+ - `status(agent: Agent)`: Reports service status including authentication and account info.
+  - Returns: Promise<{ active: boolean; service: string; authenticated: boolean; accountInfo?; error? }>.
 
-- **Interactions**: Used by tools and commands to access AWS clients. Agents require this service via `agent.requireFirstServiceByType(AWSService)`.
+- **Interactions**: Used by tools and commands to access AWS clients. Agents require this service via
+  `agent.requireFirstServiceByType(AWSService)`.
 
 ### Tools: listS3Buckets
 
 - **Description**: A tool for agents to list all S3 buckets in the configured account and region.
 
 - **Key Functions**:
-  - `execute(args: any, agent: Agent)`: Runs the tool.
-    - Requires: AWSService instance.
-    - Returns: Promise<{ buckets: Array<{ Name: string; CreationDate: string }> }>.
-    - Throws: Error if not authenticated or S3 API fails.
-  - Input Schema: `z.object({})` (no parameters).
+ - `execute(args: any, agent: Agent)`: Runs the tool.
+  - Requires: AWSService instance.
+  - Returns: Promise<{ buckets: Array<{ Name: string; CreationDate: string }> }>.
+  - Throws: Error if not authenticated or S3 API fails.
+ - Input Schema: `z.object({})` (no parameters).
 
 ### Chat Commands: aws
 
 - **Description**: Provides chat-based commands for AWS status checks within the agent interface.
 
 - **Key Functions**:
-  - `execute(remainder: string, agent: Agent)`: Parses subcommands like `status`.
-    - For `status`: Displays account, ARN, UserId, and region.
-    - Returns: void (logs to agent).
-  - `help()`: Returns help text array, e.g., "aws status # View current AWS authentication status...".
+ - `execute(remainder: string, agent: Agent)`: Parses subcommands like `status`.
+  - For `status`: Displays account, ARN, UserId, and region.
+  - Returns: void (logs to agent).
+ - `help()`: Returns help text array, e.g., "aws status # View current AWS authentication status...".
 
 ## Usage Examples
 
 ### 1. Basic Service Setup and Authentication
+
 ```typescript
 import AWSService from '@tokenring-ai/aws';
 import { AgentTeam } from '@tokenring-ai/agent';
@@ -119,6 +131,7 @@ console.log(`Account: ${identity.Account}`);
 ```
 
 ### 2. Using the listS3Buckets Tool in an Agent
+
 ```typescript
 import Agent from '@tokenring-ai/agent';
 import { execute as listS3Buckets } from '@tokenring-ai/aws/tools/listS3BucketsTool';
@@ -129,7 +142,9 @@ console.log(result.buckets); // Array of bucket objects
 ```
 
 ### 3. Chat Command for Status
+
 In an agent chat session:
+
 ```
 > aws status
 AWS Authentication Status:
@@ -142,10 +157,10 @@ AWS Authentication Status:
 ## Configuration Options
 
 - **AWSCredentials Interface**:
-  - `accessKeyId` (string, required): AWS Access Key ID.
-  - `secretAccessKey` (string, required): AWS Secret Access Key.
-  - `sessionToken` (string, optional): For temporary credentials (e.g., from STS AssumeRole).
-  - `region` (string, required): AWS region (e.g., 'us-east-1').
+ - `accessKeyId` (string, required): AWS Access Key ID.
+ - `secretAccessKey` (string, required): AWS Secret Access Key.
+ - `sessionToken` (string, optional): For temporary credentials (e.g., from STS AssumeRole).
+ - `region` (string, required): AWS region (e.g., 'us-east-1').
 
 - Environment Variables: Recommended for production (e.g., `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`).
 
@@ -156,20 +171,21 @@ No additional configs; clients use default AWS SDK settings unless overridden in
 ## API Reference
 
 - **AWSService**:
-  - `new AWSService(credentials: AWSCredentials)`
-  - `getSTSClient(): STSClient`
-  - `getS3Client(): S3Client`
-  - `getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: string }>`
+ - `new AWSService(credentials: AWSCredentials)`
+ - `getSTSClient(): STSClient`
+ - `getS3Client(): S3Client`
+ - `getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: string }>`
 
 - **Tools**:
-  - `aws/listS3Buckets.execute(args: {}, agent: Agent): Promise<{ buckets: Array<{ Name: string; CreationDate: string }> }>`
+ -
+ `aws/listS3Buckets.execute(args: {}, agent: Agent): Promise<{ buckets: Array<{ Name: string; CreationDate: string }> }>`
 
 - **Chat Commands**:
-  - `aws status`: Displays authentication status.
+ - `aws status`: Displays authentication status.
 
 - **Exports**:
-  - `AWSService` (default)
-  - `packageInfo: TokenRingPackage` (with `chatCommands` and `tools`)
+ - `AWSService` (default)
+ - `packageInfo: TokenRingPackage` (with `chatCommands` and `tools`)
 
 ## Dependencies
 
@@ -184,8 +200,11 @@ No additional configs; clients use default AWS SDK settings unless overridden in
 
 - **Testing**: Run `npm run eslint` for linting. Unit tests for AWSService and tools are recommended but not included.
 - **Building**: Use TypeScript compilation (`tsc`) via tsconfig.json.
-- **Limitations**: Currently supports only STS identity and S3 listing. Expand by adding more clients/tools (e.g., EC2, Lambda).
-- **Security**: Never hardcode credentials; use IAM roles or environment variables. The package does not handle credential rotation.
+- **Limitations**: Currently supports only STS identity and S3 listing. Expand by adding more clients/tools (e.g., EC2,
+  Lambda).
+- **Security**: Never hardcode credentials; use IAM roles or environment variables. The package does not handle
+  credential rotation.
 - **License**: MIT.
 
-For contributions, fork the repo, add features (e.g., new tools), and submit PRs. Ensure compatibility with TokenRing AI agent lifecycle.
+For contributions, fork the repo, add features (e.g., new tools), and submit PRs. Ensure compatibility with TokenRing AI
+agent lifecycle.
