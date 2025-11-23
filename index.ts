@@ -1,5 +1,7 @@
-import {AgentCommandService, AgentTeam, TokenRingPackage} from "@tokenring-ai/agent";
+import TokenRingApp from "@tokenring-ai/app"; 
+import {AgentCommandService} from "@tokenring-ai/agent";
 import {ChatService} from "@tokenring-ai/chat";
+import {TokenRingPlugin} from "@tokenring-ai/app";
 import {z} from "zod";
 import AWSService from "./AWSService.ts";
 import * as chatCommands from "./chatCommands.ts";
@@ -12,18 +14,18 @@ export default {
   name: packageJSON.name,
   version: packageJSON.version,
   description: packageJSON.description,
-  install(agentTeam: AgentTeam) {
-    const config = agentTeam.getConfigSlice('aws', AWSConfigSchema);
+  install(app: TokenRingApp) {
+    const config = app.getConfigSlice('aws', AWSConfigSchema);
     if (config) {
-      agentTeam.waitForService(ChatService, chatService =>
+      app.waitForService(ChatService, chatService =>
         chatService.addTools(packageJSON.name, tools)
       );
-      agentTeam.waitForService(AgentCommandService, agentCommandService =>
+      app.waitForService(AgentCommandService, agentCommandService =>
         agentCommandService.addAgentCommands(chatCommands)
       );
-      agentTeam.addServices(new AWSService(config));
+      app.addServices(new AWSService(config));
     }
   }
-} as TokenRingPackage;
+} as TokenRingPlugin;
 
 export {default as AWSService} from "./AWSService.ts";

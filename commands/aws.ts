@@ -1,9 +1,10 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import AWSService from "../AWSService.js";
 
-export const description = "AWS commands for authentication and status";
+const description = "AWS commands for authentication and status";
 
-export async function execute(remainder: string, agent: Agent) {
+async function execute(remainder: string, agent: Agent) {
   const awsService = agent.requireServiceByType(AWSService);
   const [subcommand, ..._args] = remainder.trim().split(/\s+/);
 
@@ -32,3 +33,8 @@ export function help() {
     "aws status   # View current AWS authentication status and account information.",
   ];
 }
+export default {
+  description,
+  execute,
+  help,
+} as TokenRingAgentCommand

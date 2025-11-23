@@ -1,8 +1,9 @@
 import {S3Client} from "@aws-sdk/client-s3";
 import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
-import {AgentTeam} from "@tokenring-ai/agent";
+import TokenRingApp from "@tokenring-ai/app";
 import Agent from "@tokenring-ai/agent/Agent";
-import {TokenRingService} from "@tokenring-ai/agent/types";
+
+import {TokenRingService} from "@tokenring-ai/app/types";
 
 export interface AWSCredentials {
   accessKeyId: string;
@@ -112,7 +113,7 @@ export default class AWSService implements TokenRingService {
   }
 
   /** Starts the AWSService. */
-  async start(_agentTeam: AgentTeam): Promise<void> {
+  async start(): Promise<void> {
     console.log("AWSService starting");
     try {
       const identity = await this.getCallerIdentity();
@@ -123,7 +124,7 @@ export default class AWSService implements TokenRingService {
   }
 
   /** Stops the AWSService. */
-  async stop(_agentTeam: AgentTeam): Promise<void> {
+  async stop(): Promise<void> {
     console.log("AWSService stopping");
   }
 

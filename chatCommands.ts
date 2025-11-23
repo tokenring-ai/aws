@@ -1,1 +1,1 @@
-export * as aws from "./commands/aws.ts";
+export {default as aws} from "./commands/aws.ts";
