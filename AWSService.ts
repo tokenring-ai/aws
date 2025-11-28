@@ -1,6 +1,5 @@
 import {S3Client} from "@aws-sdk/client-s3";
 import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
-import TokenRingApp from "@tokenring-ai/app";
 import Agent from "@tokenring-ai/agent/Agent";
 
 import {TokenRingService} from "@tokenring-ai/app/types";

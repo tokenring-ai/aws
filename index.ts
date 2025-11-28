@@ -4,9 +4,9 @@ import {ChatService} from "@tokenring-ai/chat";
 import {TokenRingPlugin} from "@tokenring-ai/app";
 import {z} from "zod";
 import AWSService from "./AWSService.ts";
-import * as chatCommands from "./chatCommands.ts";
+import chatCommands from "./chatCommands.ts";
 import packageJSON from './package.json' with {type: 'json'};
-import * as tools from "./tools.ts";
+import tools from "./tools.ts";
 
 export const AWSConfigSchema = z.any().optional();
 

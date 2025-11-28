@@ -21,18 +21,36 @@ async function execute(remainder: string, agent: Agent) {
       agent.infoLine("Please ensure AWS credentials and region are correctly configured in the AWSService.");
     }
   } else {
-    for (const line of help()) {
-      agent.infoLine(line);
-    }
+    agent.chatOutput(help);
   }
 }
 
-// noinspection JSUnusedGlobalSymbols
-export function help() {
-  return [
-    "aws status   # View current AWS authentication status and account information.",
-  ];
-}
+const help: string = `# AWS Commands
+
+Manage AWS operations including authentication status and account information.
+
+## Usage
+
+aws [command]
+
+## Available Commands
+
+### status
+View current AWS authentication status and account information including account ID, ARN, user ID, and configured region.
+
+## Examples
+
+aws status      # Display current AWS authentication status
+
+## Configuration
+
+Ensure AWS credentials are properly configured in the AWSService with:
+- **accessKeyId**: Your AWS Access Key ID
+- **secretAccessKey**: Your AWS Secret Access Key
+- **region**: Your AWS region (e.g., 'us-east-1')
+- **sessionToken**: Optional AWS Session Token (if using temporary credentials)
+
+**Note:** The 'status' command will fail if AWS credentials are not properly configured.`;
 export default {
   description,
   execute,
