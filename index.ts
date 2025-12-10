@@ -26,6 +26,6 @@ export default {
       app.addServices(new AWSService(config));
     }
   }
-} as TokenRingPlugin;
+} satisfies TokenRingPlugin;
 
 export {default as AWSService} from "./AWSService.ts";

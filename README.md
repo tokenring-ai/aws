@@ -229,7 +229,7 @@ export default {
   version: "0.1.0",
   description: "AWS integration providing authentication status and S3 interaction",
   install(app: TokenRingApp): void
-} as TokenRingPlugin
+} satisfies TokenRingPlugin
 ```
 
 ## Dependencies
