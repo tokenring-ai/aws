@@ -1,24 +1,24 @@
 {
- "name": "@tokenring-ai/aws",
- "description": "AWS integration providing authentication status and S3 interaction",
- "version": "0.2.0",
- "dependencies": {
-  "@tokenring-ai/agent": "0.2.0",
-  "@tokenring-ai/app": "0.2.0",
-  "@tokenring-ai/chat": "0.2.0",
-  "@aws-sdk/client-s3": "^3.940.0",
-  "@aws-sdk/client-sts": "^3.940.0",
-  "@tokenring-ai/filesystem": "0.2.0",
-  "node-fetch": "^3.3.2",
-  "zod": "^4.1.13"
- },
- "exports": {
-  ".": "./index.ts",
-  "./*": "./*.ts"
- },
- "license": "MIT",
- "scripts": {
-  "eslint": "eslint --fix ./"
- },
- "type": "module"
+  "name": "@tokenring-ai/aws",
+  "description": "AWS integration providing authentication status and S3 interaction",
+  "version": "0.2.0",
+  "dependencies": {
+    "@tokenring-ai/agent": "0.2.0",
+    "@tokenring-ai/app": "0.2.0",
+    "@tokenring-ai/chat": "0.2.0",
+    "@aws-sdk/client-s3": "^3.948.0",
+    "@aws-sdk/client-sts": "^3.948.0",
+    "@tokenring-ai/filesystem": "0.2.0",
+    "node-fetch": "^3.3.2",
+    "zod": "^4.1.13"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./*": "./*.ts"
+  },
+  "license": "MIT",
+  "scripts": {
+    "eslint": "eslint --fix ./"
+  },
+  "type": "module"
 }
