@@ -3,6 +3,7 @@ import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
 import Agent from "@tokenring-ai/agent/Agent";
 
 import {TokenRingService} from "@tokenring-ai/app/types";
+import waitForAbort from "@tokenring-ai/utility/promise/waitForAbort";
 
 export interface AWSCredentials {
   accessKeyId: string;
@@ -112,7 +113,7 @@ export default class AWSService implements TokenRingService {
   }
 
   /** Starts the AWSService. */
-  async start(): Promise<void> {
+  async run(signal: AbortSignal): Promise<void> {
     console.log("AWSService starting");
     try {
       const identity = await this.getCallerIdentity();
@@ -120,11 +121,10 @@ export default class AWSService implements TokenRingService {
     } catch (error: any) {
       console.error("AWSService failed to start:", error.message);
     }
-  }
-
-  /** Stops the AWSService. */
-  async stop(): Promise<void> {
-    console.log("AWSService stopping");
+    return waitForAbort(signal, async (ev) => {
+      //TODO: Probably not needed
+      console.log("AWSService stopping");
+    });
   }
 
   /** Reports the status of the service. */
