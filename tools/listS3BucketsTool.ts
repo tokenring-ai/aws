@@ -4,7 +4,7 @@ import {TokenRingToolDefinition} from "@tokenring-ai/chat/types";
 import {z} from "zod";
 import AWSService from "../AWSService.ts";
 
-const name = "aws/listS3Buckets";
+const name = "aws_listS3Buckets";
 const description = "Lists all S3 buckets in the configured AWS account and region.";
 const inputSchema = z.object({});
 
