@@ -15,27 +15,8 @@ export interface AWSCredentials {
 /**
  * AWSService provides an interface for interacting with various AWS services.
  * It handles AWS client initialization and basic authentication checks.
- * Configuration is typically provided via constructor arguments defined in `constructorProperties`.
  */
 export default class AWSService implements TokenRingService {
-  static constructorProperties = {
-    accessKeyId: {
-      type: "string",
-      required: true,
-      description: "AWS Access Key ID",
-    },
-    secretAccessKey: {
-      type: "string",
-      required: true,
-      description: "AWS Secret Access Key",
-    },
-    sessionToken: {
-      type: "string",
-      required: false,
-      description: "AWS Session Token (optional)",
-    },
-    region: {type: "string", required: true, description: "AWS Region"},
-  } as const;
   name = "AWSService";
   description = "Provides AWS functionality";
   public region!: string;
