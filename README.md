@@ -213,6 +213,21 @@ const result = await agent.executeTool("aws_listS3Buckets", {});
 console.log('S3 Buckets:', result.buckets);
 ```
 
+### 5. Using AWS Chat Commands
+
+```typescript
+import { TokenRingApp } from "@tokenring-ai/app";
+import awsPlugin from "@tokenring-ai/aws";
+
+const app = new TokenRingApp({
+  plugins: [awsPlugin]
+});
+
+const agent = app.createAgent();
+const result = await agent.executeCommand("aws status");
+// The result will be displayed in the agent's chat output
+```
+
 ## API Reference
 
 ### AWSService
