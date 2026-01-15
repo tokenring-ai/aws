@@ -1,5 +1,6 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import indent from "@tokenring-ai/utility/string/indent";
 import AWSService from "../AWSService.js";
 
 const description = "AWS commands for authentication and status";
@@ -11,14 +12,19 @@ async function execute(remainder: string, agent: Agent) {
   if (subcommand === "status") {
     try {
       const identity = await awsService.getCallerIdentity();
-      agent.infoLine("AWS Authentication Status:");
-      agent.infoLine(`  Account: ${identity.Account}`);
-      agent.infoLine(`  Arn: ${identity.Arn}`);
-      agent.infoLine(`  UserId: ${identity.UserId}`);
-      agent.infoLine(`  Region: ${awsService.region}`);
+      const lines: string[] = [
+        "AWS Authentication Status:",
+        indent([
+          `Account: ${identity.Account}`,
+          `Arn: ${identity.Arn}`,
+          `UserId: ${identity.UserId}`,
+          `Region: ${awsService.region}`
+        ], 1)
+      ];
+      agent.infoMessage(lines.join("\n"));
     } catch (error: unknown) {
-      agent.errorLine("Failed to get AWS caller identity:", error as Error);
-      agent.infoLine("Please ensure AWS credentials and region are correctly configured in the AWSService.");
+      agent.errorMessage("Failed to get AWS caller identity:", error as Error);
+      agent.infoMessage("Please ensure AWS credentials and region are correctly configured in the AWSService.");
     }
   } else {
     agent.chatOutput(help);
