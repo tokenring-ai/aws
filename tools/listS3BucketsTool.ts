@@ -5,6 +5,7 @@ import {z} from "zod";
 import AWSService from "../AWSService.ts";
 
 const name = "aws_listS3Buckets";
+const displayName = "Aws/listS3BucketsTool";
 const description = "Lists all S3 buckets in the configured AWS account and region.";
 const inputSchema = z.object({});
 
@@ -38,5 +39,5 @@ async function execute(_args: z.input<typeof inputSchema>, agent: Agent) {
 
 
 export default {
-  name, description, inputSchema, execute,
+  name, displayName, description, inputSchema, execute,
 } satisfies TokenRingToolDefinition<typeof inputSchema>;
