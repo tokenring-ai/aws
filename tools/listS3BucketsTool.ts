@@ -15,7 +15,7 @@ const inputSchema = z.object({});
  * Returns a JSON object containing the buckets array.
  * Errors are thrown with a message prefixed by the tool name.
  */
-async function execute(_args: z.input<typeof inputSchema>, agent: Agent) {
+async function execute(_args: z.output<typeof inputSchema>, agent: Agent) {
   const awsService = agent.requireServiceByType(AWSService);
 
   if (!awsService.isAuthenticated()) {
@@ -30,7 +30,7 @@ async function execute(_args: z.input<typeof inputSchema>, agent: Agent) {
       Name: bucket.Name,
       CreationDate: bucket.CreationDate,
     }));
-    return {buckets} as const;
+    return { type: 'json' as const, data: { buckets } };
   } catch (error: any) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`[${name}] Error listing S3 buckets: ${message}`);
