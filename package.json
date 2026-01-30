@@ -10,7 +10,7 @@
     "@aws-sdk/client-sts": "^3.978.0",
     "@tokenring-ai/filesystem": "0.2.0",
     "node-fetch": "^3.3.2",
-    "zod": "catalog:"
+    "zod": "^4.3.6"
   },
   "exports": {
     ".": "./index.ts",
@@ -26,7 +26,7 @@
   },
   "type": "module",
   "devDependencies": {
-    "vitest": "catalog:",
-    "typescript": "catalog:"
+    "vitest": "^4.0.18",
+    "typescript": "^5.9.3"
   }
 }
