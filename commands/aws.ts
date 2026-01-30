@@ -18,7 +18,7 @@ async function execute(remainder: string, agent: Agent) {
           `Account: ${identity.Account}`,
           `Arn: ${identity.Arn}`,
           `UserId: ${identity.UserId}`,
-          `Region: ${awsService.region}`
+          `Region: ${awsService.options.region}`
         ], 1)
       ];
       agent.infoMessage(lines.join("\n"));

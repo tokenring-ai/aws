@@ -4,12 +4,12 @@ import {ChatService} from "@tokenring-ai/chat";
 import {z} from "zod";
 import AWSService from "./AWSService.ts";
 import chatCommands from "./chatCommands.ts";
-import {AWSConfigSchema} from "./index.ts";
 import packageJSON from './package.json' with {type: 'json'};
+import {AWSConfigSchema} from "./schema.ts";
 import tools from "./tools.ts";
 
 const packageConfigSchema = z.object({
-  aws: AWSConfigSchema,
+  aws: AWSConfigSchema.optional(),
 })
 
 export default {

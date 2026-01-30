@@ -4,13 +4,9 @@ import Agent from "@tokenring-ai/agent/Agent";
 
 import {TokenRingService} from "@tokenring-ai/app/types";
 import waitForAbort from "@tokenring-ai/utility/promise/waitForAbort";
+import {z} from "zod";
 
-export interface AWSCredentials {
-  accessKeyId: string;
-  secretAccessKey: string;
-  sessionToken?: string;
-  region: string;
-}
+import {AWSConfigSchema} from "./schema.ts";
 
 /**
  * AWSService provides an interface for interacting with various AWS services.
@@ -19,18 +15,10 @@ export interface AWSCredentials {
 export default class AWSService implements TokenRingService {
   name = "AWSService";
   description = "Provides AWS functionality";
-  public region!: string;
-  private readonly accessKeyId!: string;
-  private readonly secretAccessKey!: string;
-  private readonly sessionToken?: string;
   private stsClient?: STSClient;
   private s3Client?: S3Client;
 
-  constructor({accessKeyId, secretAccessKey, sessionToken, region}: AWSCredentials) {
-    this.accessKeyId = accessKeyId;
-    this.secretAccessKey = secretAccessKey;
-    this.sessionToken = sessionToken;
-    this.region = region;
+  constructor(readonly options: z.output<typeof AWSConfigSchema>) {
   }
 
   /**
@@ -41,12 +29,12 @@ export default class AWSService implements TokenRingService {
     credentials: { accessKeyId: string; secretAccessKey: string; sessionToken?: string }
   } & Record<string, unknown>) => T, clientConfig: Record<string, unknown> = {}): T {
     const credentials = {
-      accessKeyId: this.accessKeyId,
-      secretAccessKey: this.secretAccessKey,
-      ...(this.sessionToken ? {sessionToken: this.sessionToken} : {}),
+      accessKeyId: this.options.accessKeyId,
+      secretAccessKey: this.options.secretAccessKey,
+      ...(this.options.sessionToken ? {sessionToken: this.options.sessionToken} : {}),
     };
     return new ClientClass({
-      region: this.region,
+      region: this.options.region,
       credentials,
       ...clientConfig,
     });
@@ -70,7 +58,7 @@ export default class AWSService implements TokenRingService {
 
   /** Checks if credentials and region are configured. */
   isAuthenticated(): boolean {
-    return !!(this.accessKeyId && this.secretAccessKey && this.region);
+    return !!(this.options.accessKeyId && this.options.secretAccessKey && this.options.region);
   }
 
   /** Retrieves the caller identity using AWS STS. */
