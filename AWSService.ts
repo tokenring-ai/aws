@@ -3,7 +3,6 @@ import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
 import Agent from "@tokenring-ai/agent/Agent";
 
 import {TokenRingService} from "@tokenring-ai/app/types";
-import waitForAbort from "@tokenring-ai/utility/promise/waitForAbort";
 import {z} from "zod";
 
 import {AWSConfigSchema} from "./schema.ts";
@@ -13,7 +12,7 @@ import {AWSConfigSchema} from "./schema.ts";
  * It handles AWS client initialization and basic authentication checks.
  */
 export default class AWSService implements TokenRingService {
-  name = "AWSService";
+  readonly name = "AWSService";
   description = "Provides AWS functionality";
   private stsClient?: STSClient;
   private s3Client?: S3Client;
@@ -79,21 +78,6 @@ export default class AWSService implements TokenRingService {
       console.error("Error getting caller identity:", error);
       throw error;
     }
-  }
-
-  /** Starts the AWSService. */
-  async run(signal: AbortSignal): Promise<void> {
-    console.log("AWSService starting");
-    try {
-      const identity = await this.getCallerIdentity();
-      console.log("AWS authentication successful:", identity);
-    } catch (error: any) {
-      console.error("AWSService failed to start:", error.message);
-    }
-    return waitForAbort(signal, async (ev) => {
-      //TODO: Probably not needed
-      console.log("AWSService stopping");
-    });
   }
 
   /** Reports the status of the service. */
