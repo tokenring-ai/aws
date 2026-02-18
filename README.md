@@ -131,7 +131,6 @@ class AWSService implements TokenRingService {
   getS3Client(): S3Client;
   isAuthenticated(): boolean;
   async getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: string }>;
-  async run(signal: AbortSignal): Promise<void>;
   async status(_agent: Agent): Promise<{
     active: boolean;
     service: string;
@@ -148,7 +147,6 @@ class AWSService implements TokenRingService {
 - `getS3Client()`: Returns the S3 client singleton
 - `isAuthenticated()`: Returns true if credentials and region are configured
 - `getCallerIdentity()`: Retrieves AWS account information via STS
-- `run(signal: AbortSignal)`: Starts the service and verifies authentication
 - `status(agent: Agent)`: Returns service status including authentication state and account info
 
 ## Plugin Configuration
@@ -166,6 +164,20 @@ export const AWSConfigSchema = z.object({
   sessionToken: z.string().optional(),
   region: z.string(),
 }).strict();
+```
+
+### Plugin Configuration
+
+The plugin expects configuration nested under the `aws` key:
+
+```typescript
+{
+  aws: {
+    accessKeyId: "AKIAIOSFODNN7EXAMPLE",
+    secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+    region: "us-east-1"
+  }
+}
 ```
 
 ### Configuration Example
@@ -199,11 +211,11 @@ export const AWSConfigSchema = z.object({
 
 - **accessKeyId**: AWS Access Key ID for authentication
 - **secretAccessKey**: AWS Secret Access Key for authentication
+- **region**: AWS region where credentials apply
 
 ### Optional Configuration Parameters
 
 - **sessionToken**: AWS session token for temporary credentials or assume-role scenarios
-- **region**: AWS region where credentials apply (defaults to bucket-specific configuration)
 
 ## Usage Examples
 
@@ -306,9 +318,7 @@ if (serviceStatus.error) {
 }
 ```
 
-## Integration Patterns
-
-### Plugin Registration
+### Service Registration During Install
 
 The service integrates through the Token Ring plugin system:
 
@@ -330,55 +340,20 @@ app.config.aws = {
 };
 ```
 
-### Service Registration During Install
-
-```typescript
-{
-  name: packageJSON.name,
-  install(app, config) {
-    if (config.aws) {
-      // Wait for chat service and register tools
-      app.waitForService(ChatService, chatService =>
-        chatService.addTools(tools)
-      );
-
-      // Wait for agent command service and register commands
-      app.waitForService(AgentCommandService, agentCommandService =>
-        agentCommandService.addAgentCommands(chatCommands)
-      );
-
-      // Add the AWS service
-      app.addServices(new AWSService(config.aws));
-    }
-  },
-  config: z.object({
-    aws: AWSConfigSchema.optional(),
-  })
-}
-```
-
 ## Error Handling
 
 The package implements comprehensive error handling strategies:
 
 ### Service-Level Errors
 
-Service initialization errors are caught and logged in the `run()` method startup sequence:
+The service throws errors when authentication is not configured:
 
 ```typescript
-async run(signal: AbortSignal): Promise<void> {
-  console.log("AWSService starting");
-  try {
-    const identity = await this.getCallerIdentity();
-    console.log("AWS authentication successful:", identity);
-  } catch (error: any) {
-    console.error("AWSService failed to start:", error.message);
-    // Service continues running but will fail operations
+async getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: string }> {
+  if (!this.isAuthenticated()) {
+    throw new Error("AWS credentials are not configured.");
   }
-  return waitForAbort(signal, async (ev) => {
-    //TODO: Probably not needed
-    console.log("AWSService stopping");
-  });
+  // ... operation
 }
 ```
 
@@ -391,14 +366,14 @@ async execute(_args: {}, agent: Agent) {
   const awsService = agent.requireServiceByType(AWSService);
 
   if (!awsService.isAuthenticated()) {
-    throw new Error(`[${name}] AWS credentials not configured in AWSService.`);
+    throw new Error(`[aws_listS3Buckets] AWS credentials not configured in AWSService.`);
   }
 
   try {
     // ... operation
   } catch (error: any) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`[${name}] Error listing S3 buckets: ${message}`);
+    throw new Error(`[aws_listS3Buckets] Error listing S3 buckets: ${message}`);
   }
 }
 ```
@@ -424,14 +399,14 @@ async execute(remainder: string, agent: Agent) {
 1. **Missing Credentials**: `AWS credentials are not configured.`
 2. **Auth Failure**: `Failed to get AWS caller identity: [Error details]`
 3. **Tool Not Configured**: `[aws_listS3Buckets] AWS credentials not configured in AWSService.`
-4. **Service Startup Failure**: `AWSService failed to start: [Error details]`
+4. **Service Status Failure**: Service returns `authenticated: false` with error message
 
 ## Package Structure
 
 ```
 pkg/aws/
 ├── README.md                    # Documentation
-├── index.ts                     # Main exports (AWSService, AWSConfigSchema)
+├── index.ts                     # Main exports (AWSService)
 ├── AWSService.ts                # Core service class implementing TokenRingService
 ├── plugin.ts                    # Token Ring plugin registration and service setup
 ├── tools.ts                     # Barrel export for all tools (listS3Buckets)
@@ -455,10 +430,10 @@ The package relies on the following dependencies:
   "@tokenring-ai/app": "0.2.0",
   "@tokenring-ai/agent": "0.2.0",
   "@tokenring-ai/chat": "0.2.0",
+  "@aws-sdk/client-s3": "^3.992.0",
+  "@aws-sdk/client-sts": "^3.992.0",
   "@tokenring-ai/filesystem": "0.2.0",
-  "@aws-sdk/client-s3": "^3.978.0",
-  "@aws-sdk/client-sts": "^3.978.0",
-  "node-fetch": "^3.3.2",
+  "@tokenring-ai/utility": "0.2.0",
   "zod": "^4.3.6"
 }
 ```
@@ -471,7 +446,7 @@ The package relies on the following dependencies:
 - **@tokenring-ai/filesystem**: File system utilities (used by tools)
 - **@aws-sdk/client-s3**: S3 service client for bucket listing operations
 - **@aws-sdk/client-sts**: STS service client for caller identity verification
-- **node-fetch**: HTTP client utility
+- **@tokenring-ai/utility**: Utility functions like string indentation
 - **zod**: Runtime type validation for configuration
 
 ## Testing
@@ -508,8 +483,8 @@ bun run eslint
 ### Service Management
 
 - Leverage singleton pattern for AWS clients (STSClient, S3Client)
-- Properly handle AbortSignal for service lifecycle management
-- Monitor service startup failures in production
+- Properly handle service lifecycle management
+- Monitor service status for authentication failures
 
 ### Error Handling
 
