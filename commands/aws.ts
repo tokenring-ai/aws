@@ -1,11 +1,12 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import indent from "@tokenring-ai/utility/string/indent";
 import AWSService from "../AWSService.js";
 
 const description = "AWS commands for authentication and status";
 
-async function execute(remainder: string, agent: Agent) {
+async function execute(remainder: string, agent: Agent): Promise<string> {
   const awsService = agent.requireServiceByType(AWSService);
   const [subcommand, ..._args] = remainder.trim().split(/\s+/);
 
@@ -21,13 +22,12 @@ async function execute(remainder: string, agent: Agent) {
           `Region: ${awsService.options.region}`
         ], 1)
       ];
-      agent.infoMessage(lines.join("\n"));
+      return lines.join("\n");
     } catch (error: unknown) {
-      agent.errorMessage("Failed to get AWS caller identity:", error as Error);
-      agent.infoMessage("Please ensure AWS credentials and region are correctly configured in the AWSService.");
+      throw new CommandFailedError(`Failed to get AWS caller identity: ${error instanceof Error ? error.message : String(error)}`);
     }
   } else {
-    agent.chatOutput(help);
+    return help;
   }
 }
 
