@@ -1,5 +1,5 @@
 import aws from "./commands/aws.ts";
 
-export default {
+export default [
   aws,
-};
+];

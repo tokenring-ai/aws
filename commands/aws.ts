@@ -58,6 +58,7 @@ Ensure AWS credentials are properly configured in the AWSService with:
 
 **Note:** The 'status' command will fail if AWS credentials are not properly configured.`;
 export default {
+  name: "aws",
   description,
   execute,
   help,
