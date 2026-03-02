@@ -1,4 +1,4 @@
-import aws from "./commands/aws.ts";
+import aws from "./commands/awsStatus.ts";
 
 export default [
   aws,
