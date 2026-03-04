@@ -1,20 +1,21 @@
-# AWS Integration
+# @tokenring-ai/aws
 
-AWS integration providing authentication status and S3 interaction.
+AWS integration package for Token Ring, providing authentication verification and S3 interaction capabilities.
 
 ## Overview
 
-The AWS integration package provides AWS service management for Token Ring agents. It handles AWS client initialization and authentication verification. The package includes a tool for S3 bucket listing and a chat command for authentication status verification.
+The `@tokenring-ai/aws` package provides AWS service management for Token Ring agents. It handles AWS client initialization, authentication verification using AWS STS, and S3 bucket listing functionality. The package implements a TokenRingPlugin that automatically registers services, tools, and chat commands when configured.
 
 ## Key Features
 
 - AWS authentication verification using STS GetCallerIdentity
 - Automatic AWS SDK client management with singleton pattern
-- S3 bucket listing tool
-- Chat command interface for authentication status checks
+- S3 bucket listing tool for discovering available buckets
+- Chat command interface for authentication status checks (`aws status`)
 - Service registration and lifecycle management via Token Ring plugin system
 - Support for temporary credentials via session tokens
 - Generic AWS client initialization for extending to other AWS services
+- Zod-based configuration schema for type-safe credentials management
 
 ## Installation
 
@@ -53,7 +54,7 @@ Main service class for AWS functionality management. Implements the `TokenRingSe
 **Class Definition:**
 
 ```typescript
-class AWSService implements TokenRingService {
+export default class AWSService implements TokenRingService {
   readonly name = "AWSService";
   description = "Provides AWS functionality";
   private stsClient?: STSClient;
@@ -76,8 +77,107 @@ class AWSService implements TokenRingService {
 | `getSTSClient` | Gets or creates the STS client singleton | None | `STSClient` instance |
 | `getS3Client` | Gets or creates the S3 client singleton | None | `S3Client` instance |
 | `isAuthenticated` | Checks if credentials and region are configured | None | `boolean` - true if configured |
-| `getCallerIdentity` | Retrieves AWS account information via STS GetCallerIdentity | None | Object with `Arn`, `Account`, `UserId` |
-| `status` | Reports the status of the service including authentication state | `agent`: Agent instance for service access | Service status object with authentication details |
+| `getCallerIdentity` | Retrieves AWS account information via STS GetCallerIdentity | None | Promise\<Object with `Arn`, `Account`, `UserId`\> |
+| `status` | Reports the status of the service including authentication state | `_agent`: Agent instance for service access | Promise\<Service status object with authentication details\> |
+
+**Detailed Method Documentation:**
+
+#### `initializeAWSClient<T>(ClientClass, clientConfig)`
+
+Creates and returns a new AWS SDK client instance using the configured credentials.
+
+```typescript
+initializeAWSClient<T>(
+  ClientClass: new (config: {
+    region: string;
+    credentials: { accessKeyId: string; secretAccessKey: string; sessionToken?: string }
+  } & Record<string, unknown>) => T,
+  clientConfig: Record<string, unknown> = {}
+): T
+```
+
+**Parameters:**
+- `ClientClass`: The AWS SDK client constructor (e.g., `STSClient`, `S3Client`, `DynamoDBClient`)
+- `clientConfig`: Optional additional configuration to merge with credentials
+
+**Returns:** Initialized AWS SDK client instance
+
+**Example:**
+
+```typescript
+import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
+
+const dynamoDBClient = awsService.initializeAWSClient(DynamoDBClient);
+```
+
+#### `getSTSClient()`
+
+Gets or creates the STS client using singleton pattern.
+
+```typescript
+getSTSClient(): STSClient
+```
+
+**Returns:** `STSClient` instance
+
+#### `getS3Client()`
+
+Gets or creates the S3 client using singleton pattern.
+
+```typescript
+getS3Client(): S3Client
+```
+
+**Returns:** `S3Client` instance
+
+#### `isAuthenticated()`
+
+Checks if AWS credentials and region are configured.
+
+```typescript
+isAuthenticated(): boolean
+```
+
+**Returns:** `true` if `accessKeyId`, `secretAccessKey`, and `region` are all configured
+
+#### `getCallerIdentity()`
+
+Retrieves AWS account information by calling STS GetCallerIdentity.
+
+```typescript
+async getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: string }>
+```
+
+**Returns:** Object containing:
+- `Arn`: The ARN of the caller
+- `Account`: The AWS account ID
+- `UserId`: The unique user ID
+
+**Throws:** Error if credentials are not configured or STS call fails
+
+#### `status(agent)`
+
+Reports the current status of the AWSService.
+
+```typescript
+async status(_agent: Agent): Promise<{
+  active: boolean;
+  service: string;
+  authenticated: boolean;
+  accountInfo?: { Arn?: string; Account?: string; UserId?: string };
+  error?: string;
+}>
+```
+
+**Parameters:**
+- `_agent`: Agent instance (used for service access if needed)
+
+**Returns:** Status object with:
+- `active`: Whether the service is active
+- `service`: Service name ("AWSService")
+- `authenticated`: Whether authentication is successful
+- `accountInfo`: Account information if authenticated
+- `error`: Error message if authentication failed
 
 ### Tools
 
@@ -95,6 +195,25 @@ Lists all S3 buckets in the configured AWS account and region.
   inputSchema: z.object({}),
   execute: (_args: {}, agent: Agent) => Promise<{ type: 'json'; data: { buckets: Array<{ Name: string; CreationDate: Date }> } }>
 }
+```
+
+**Input Schema:** Empty object (no parameters required)
+
+**Returns:** JSON object containing:
+```typescript
+{
+  buckets: Array<{
+    Name: string;
+    CreationDate: Date;
+  }>
+}
+```
+
+**Example Usage:**
+
+```typescript
+const result = await agent.callTool("aws_listS3Buckets", {});
+console.log("S3 Buckets:", result.data.buckets);
 ```
 
 ### Chat Commands
@@ -120,9 +239,71 @@ View current AWS authentication status and account information.
 aws status      # Display current AWS authentication status
 ```
 
+**Output Format:**
+
+```
+AWS Authentication Status:
+  Account: 123456789012
+  Arn: arn:aws:iam::123456789012:user/example
+  UserId: AIDAI23EXAMPLE
+  Region: us-east-1
+```
+
+**Help Text:**
+
+```
+/aws status - View current AWS authentication status
+
+View current AWS authentication status and account information including account ID, ARN, user ID, and configured region.
+
+## Examples
+
+aws status      # Display current AWS authentication status
+
+## Configuration
+
+Ensure AWS credentials are properly configured in the AWSService with:
+- **accessKeyId**: Your AWS Access Key ID
+- **secretAccessKey**: Your AWS Secret Access Key
+- **region**: Your AWS region (e.g., 'us-east-1')
+- **sessionToken**: Optional AWS Session Token (if using temporary credentials)
+```
+
 ## Usage Examples
 
-### Basic Service Initialization
+### Plugin Installation
+
+The recommended way to use the AWS package is via the plugin system:
+
+```typescript
+import {TokenRingApp} from "@tokenring-ai/app";
+import awsPlugin from "@tokenring-ai/aws";
+
+const app = new TokenRingApp();
+
+app.install(awsPlugin, {
+  aws: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    region: process.env.AWS_REGION || 'us-east-1'
+  }
+});
+
+// Service automatically available
+const awsService = app.requireService('AWSService');
+
+// Check authentication status
+if (awsService.isAuthenticated()) {
+  const identity = await awsService.getCallerIdentity();
+  console.log(`Account: ${identity.Account}`);
+  console.log(`ARN: ${identity.Arn}`);
+  console.log(`UserId: ${identity.UserId}`);
+}
+```
+
+### Direct Service Initialization
+
+For advanced usage, you can instantiate the service directly:
 
 ```typescript
 import AWSService from "@tokenring-ai/aws";
@@ -137,7 +318,7 @@ const awsService = new AWSService({
 if (awsService.isAuthenticated()) {
   const identity = await awsService.getCallerIdentity();
   console.log(`Account: ${identity.Account}`);
-  console.log(`Arn: ${identity.Arn}`);
+  console.log(`ARN: ${identity.Arn}`);
   console.log(`UserId: ${identity.UserId}`);
 }
 ```
@@ -162,7 +343,6 @@ result.data.buckets.forEach((bucket) => {
 **Via Service:**
 
 ```typescript
-// Direct S3 client access
 import {ListBucketsCommand} from "@aws-sdk/client-s3";
 
 const s3Client = awsService.getS3Client();
@@ -174,8 +354,9 @@ console.log("S3 Buckets:", response.Buckets?.map(b => b.Name));
 
 **Via Chat Command:**
 
-```bash
-aws status  # Display authentication status
+```typescript
+// Send the command via agent
+await agent.sendMessage("aws status");
 ```
 
 ### Authentication Verification
@@ -209,11 +390,38 @@ The `initializeAWSClient` method allows creating clients for other AWS services:
 
 ```typescript
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
+import {SNSClient} from "@aws-sdk/client-sns";
+import {SQSClient} from "@aws-sdk/client-sqs";
 
 // Create a DynamoDB client using the configured credentials
 const dynamoDBClient = awsService.initializeAWSClient(DynamoDBClient);
 
-// Use the client as normal
+// Create an SNS client
+const snsClient = awsService.initializeAWSClient(SNSClient);
+
+// Create an SQS client with additional configuration
+const sqsClient = awsService.initializeAWSClient(SQSClient, {
+  endpoint: "https://sqs.us-east-1.amazonaws.com"
+});
+
+// Use the clients as normal
+```
+
+### Using Session Tokens
+
+For temporary credentials (e.g., from IAM roles or assume-role):
+
+```typescript
+const awsService = new AWSService({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  sessionToken: process.env.AWS_SESSION_TOKEN!,
+  region: process.env.AWS_REGION!
+});
+
+// The session token will be automatically included in all client requests
+const identity = await awsService.getCallerIdentity();
+console.log("Temporary credentials active for:", identity.Arn);
 ```
 
 ## Configuration
@@ -240,14 +448,15 @@ The plugin expects configuration nested under the `aws` key:
 ```typescript
 {
   aws: {
-    accessKeyId: "AKIAIOSFODNN7EXAMPLE",
-    secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-    region: "us-east-1"
+    accessKeyId: string,
+    secretAccessKey: string,
+    sessionToken?: string,
+    region: string
   }
 }
 ```
 
-### Configuration Example
+### Configuration Examples
 
 **Basic Configuration:**
 
@@ -274,15 +483,32 @@ The plugin expects configuration nested under the `aws` key:
 }
 ```
 
+**Environment Variable Configuration:**
+
+```typescript
+{
+  aws: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    sessionToken: process.env.AWS_SESSION_TOKEN,
+    region: process.env.AWS_REGION || 'us-east-1'
+  }
+}
+```
+
 ### Required Configuration Parameters
 
-- **accessKeyId**: AWS Access Key ID for authentication
-- **secretAccessKey**: AWS Secret Access Key for authentication
-- **region**: AWS region where credentials apply
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `accessKeyId` | string | AWS Access Key ID for authentication |
+| `secretAccessKey` | string | AWS Secret Access Key for authentication |
+| `region` | string | AWS region where credentials apply (e.g., 'us-east-1') |
 
 ### Optional Configuration Parameters
 
-- **sessionToken**: AWS session token for temporary credentials or assume-role scenarios
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sessionToken` | string | AWS session token for temporary credentials or assume-role scenarios |
 
 ## Integration
 
@@ -303,9 +529,6 @@ app.install(awsPlugin, {
     region: process.env.AWS_REGION || 'us-east-1'
   }
 });
-
-// Service automatically available
-const awsService = app.requireService('AWSService');
 ```
 
 **Component Registration Flow:**
@@ -313,7 +536,7 @@ const awsService = app.requireService('AWSService');
 1. Plugin install phase waits for ChatService
 2. Registers tool `aws_listS3Buckets` with ChatService
 3. Waits for AgentCommandService
-4. Registers command `aws` with AgentCommandService
+4. Registers command `aws status` with AgentCommandService
 5. Adds AWSService instance to app services
 
 ### Service Access
@@ -331,7 +554,7 @@ if (awsService.isAuthenticated()) {
   const identity = await awsService.getCallerIdentity();
   console.log(`Account: ${identity.Account}`);
   console.log(`ARN: ${identity.Arn}`);
-  console.log(`User ID: ${identity.UserId}`);
+  console.log(`UserId: ${identity.UserId}`);
 }
 ```
 
@@ -424,7 +647,7 @@ async execute(_args: {}, agent: Agent) {
 
 ### Chat Command Errors
 
-Chat commands use command errors for user-facing error messages:
+Chat commands use CommandFailedError for user-facing error messages:
 
 ```typescript
 async execute(remainder: string, agent: Agent) {
@@ -439,11 +662,13 @@ async execute(remainder: string, agent: Agent) {
 
 ### Common Error Scenarios
 
-1. **Missing Credentials**: `AWS credentials are not configured.`
-2. **Auth Failure**: `Failed to get AWS caller identity: [Error details]`
-3. **Tool Not Configured**: `[aws_listS3Buckets] AWS credentials not configured in AWSService.`
-4. **Service Status Failure**: Service returns `authenticated: false` with error message
-5. **SDK Errors**: Wrapped with tool name prefix for debugging
+| Error | Cause | Resolution |
+|-------|-------|------------|
+| `AWS credentials are not configured.` | Missing accessKeyId, secretAccessKey, or region | Provide complete configuration |
+| `Failed to get AWS caller identity: [Error details]` | Invalid credentials or network issue | Verify credentials and network connectivity |
+| `[aws_listS3Buckets] AWS credentials not configured in AWSService.` | Tool executed without credentials | Configure AWS credentials before using tool |
+| Service returns `authenticated: false` with error message | STS call failed | Check AWS credentials and permissions |
+| SDK Errors (wrapped with tool name prefix) | AWS service-specific errors | Review AWS service documentation for specific error |
 
 ## Package Structure
 
@@ -468,7 +693,7 @@ pkg/aws/
 
 ### Credential Security
 
-- Never commit AWS credentials to version control
+- **Never commit AWS credentials to version control**
 - Use environment variables for credential storage
 - Restrict AWS Key usage to least privilege
 - Rotate credentials regularly
