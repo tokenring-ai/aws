@@ -2,7 +2,7 @@ import Agent from "@tokenring-ai/agent/Agent";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import indent from "@tokenring-ai/utility/string/indent";
-import AWSService from "../AWSService.js";
+import AWSService from "../AWSService.ts";
 
 const description = "/aws status - View current AWS authentication status";
 

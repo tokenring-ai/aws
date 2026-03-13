@@ -28,8 +28,8 @@ bun add @tokenring-ai/aws
 - `@tokenring-ai/agent`: 0.2.0
 - `@tokenring-ai/app`: 0.2.0
 - `@tokenring-ai/chat`: 0.2.0
-- `@aws-sdk/client-s3`: ^3.1000.0
-- `@aws-sdk/client-sts`: ^3.1000.0
+- `@aws-sdk/client-s3`: ^3.1004.0
+- `@aws-sdk/client-sts`: ^3.1004.0
 - `@tokenring-ai/filesystem`: 0.2.0
 - `@tokenring-ai/utility`: 0.2.0
 - `zod`: ^4.3.6
@@ -60,12 +60,7 @@ export default class AWSService implements TokenRingService {
   private stsClient?: STSClient;
   private s3Client?: S3Client;
 
-  constructor(readonly options: {
-    accessKeyId: string;
-    secretAccessKey: string;
-    sessionToken?: string;
-    region: string;
-  });
+  constructor(readonly options: z.output<typeof AWSConfigSchema>);
 }
 ```
 
@@ -181,6 +176,15 @@ async status(_agent: Agent): Promise<{
 
 ### Tools
 
+The package exports tools via the `tools.ts` module:
+
+```typescript
+import tools from "@tokenring-ai/aws/tools";
+
+// Access the listS3Buckets tool
+const listS3BucketsTool = tools.listS3Buckets;
+```
+
 #### aws_listS3Buckets
 
 Lists all S3 buckets in the configured AWS account and region.
@@ -216,7 +220,16 @@ const result = await agent.callTool("aws_listS3Buckets", {});
 console.log("S3 Buckets:", result.data.buckets);
 ```
 
-### Chat Commands
+### Commands
+
+The package exports commands via the `commands.ts` module:
+
+```typescript
+import commands from "@tokenring-ai/aws/commands";
+
+// Access the aws status command
+const awsStatusCommand = commands[0];
+```
 
 #### aws status
 
@@ -770,8 +783,8 @@ The package relies on the following dependencies:
   "@tokenring-ai/app": "0.2.0",
   "@tokenring-ai/agent": "0.2.0",
   "@tokenring-ai/chat": "0.2.0",
-  "@aws-sdk/client-s3": "^3.1000.0",
-  "@aws-sdk/client-sts": "^3.1000.0",
+  "@aws-sdk/client-s3": "^3.1004.0",
+  "@aws-sdk/client-sts": "^3.1004.0",
   "@tokenring-ai/filesystem": "0.2.0",
   "@tokenring-ai/utility": "0.2.0",
   "zod": "^4.3.6"
@@ -792,8 +805,8 @@ The package relies on the following dependencies:
 ## Related Components
 
 - **AWSService**: Core service implementation with client management, authentication, and status reporting
-- **tools.ts**: Barrel export for all AWS tools
-- **commands.ts**: Barrel export for all AWS commands
+- **tools.ts**: Module exporting all AWS tools
+- **commands.ts**: Module exporting all AWS commands
 - **plugin.ts**: Token Ring plugin registration and service setup
 
 ## License
