@@ -1,6 +1,6 @@
 # @tokenring-ai/aws
 
-AWS integration package for Token Ring, providing authentication verification and S3 interaction capabilities.
+AWS integration providing authentication status and S3 interaction
 
 ## Overview
 
@@ -28,8 +28,8 @@ bun add @tokenring-ai/aws
 - `@tokenring-ai/agent`: 0.2.0
 - `@tokenring-ai/app`: 0.2.0
 - `@tokenring-ai/chat`: 0.2.0
-- `@aws-sdk/client-s3`: ^3.1004.0
-- `@aws-sdk/client-sts`: ^3.1004.0
+- `@aws-sdk/client-s3`: ^3.1009.0
+- `@aws-sdk/client-sts`: ^3.1009.0
 - `@tokenring-ai/filesystem`: 0.2.0
 - `@tokenring-ai/utility`: 0.2.0
 - `zod`: ^4.3.6
@@ -149,6 +149,8 @@ async getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: st
 - `UserId`: The unique user ID
 
 **Throws:** Error if credentials are not configured or STS call fails
+
+**Implementation Note:** This method logs errors to the console before re-throwing them.
 
 #### `status(agent)`
 
@@ -637,6 +639,8 @@ async getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: st
 }
 ```
 
+**Implementation Note:** Errors are logged to the console before being re-thrown.
+
 ### Tool Execution Errors
 
 Tool errors are wrapped with tool-name prefixes for clear error attribution:
@@ -783,8 +787,8 @@ The package relies on the following dependencies:
   "@tokenring-ai/app": "0.2.0",
   "@tokenring-ai/agent": "0.2.0",
   "@tokenring-ai/chat": "0.2.0",
-  "@aws-sdk/client-s3": "^3.1004.0",
-  "@aws-sdk/client-sts": "^3.1004.0",
+  "@aws-sdk/client-s3": "^3.1009.0",
+  "@aws-sdk/client-sts": "^3.1009.0",
   "@tokenring-ai/filesystem": "0.2.0",
   "@tokenring-ai/utility": "0.2.0",
   "zod": "^4.3.6"
