@@ -1,12 +1,16 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import indent from "@tokenring-ai/utility/string/indent";
 import AWSService from "../AWSService.ts";
 
 const description = "View current AWS authentication status";
 
-async function execute(remainder: string, agent: Agent): Promise<string> {
+const inputSchema = {
+  args: {},
+  allowAttachments: false,
+} as const satisfies AgentCommandInputSchema;
+
+async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const awsService = agent.requireServiceByType(AWSService);
   try {
     const identity = await awsService.getCallerIdentity();
@@ -44,6 +48,7 @@ Ensure AWS credentials are properly configured in the AWSService with:
 export default {
   name: "aws status",
   description,
+  inputSchema,
   execute,
   help,
-} satisfies TokenRingAgentCommand
+} satisfies TokenRingAgentCommand<typeof inputSchema>;
