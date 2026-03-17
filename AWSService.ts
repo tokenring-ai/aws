@@ -66,18 +66,13 @@ export default class AWSService implements TokenRingService {
       throw new Error("AWS credentials are not configured.");
     }
     const stsClient = this.getSTSClient();
-    try {
-      const command = new GetCallerIdentityCommand({});
-      const response = await stsClient.send(command);
-      return {
-        Arn: response.Arn,
-        Account: response.Account,
-        UserId: response.UserId,
-      };
-    } catch (error: any) {
-      console.error("Error getting caller identity:", error);
-      throw error;
-    }
+    const command = new GetCallerIdentityCommand({});
+    const response = await stsClient.send(command);
+    return {
+      Arn: response.Arn,
+      Account: response.Account,
+      UserId: response.UserId,
+    };
   }
 
   /** Reports the status of the service. */
