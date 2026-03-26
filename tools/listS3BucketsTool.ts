@@ -26,14 +26,14 @@ async function execute(_args: z.output<typeof inputSchema>, agent: Agent) {
     const s3Client = awsService.getS3Client();
     const command = new ListBucketsCommand({});
     const response: any = await s3Client.send(command);
-    const buckets = (response.Buckets || []).map((bucket: any) => ({
+    const buckets = (response.Buckets ?? []).map((bucket: any) => ({
       Name: bucket.Name,
       CreationDate: bucket.CreationDate,
     }));
     return { type: 'json' as const, data: { buckets } };
   } catch (error: any) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`[${name}] Error listing S3 buckets: ${message}`);
+    throw new Error(`[${name}] Failed to list S3 buckets: ${message}`);
   }
 }
 

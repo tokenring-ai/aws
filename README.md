@@ -28,8 +28,8 @@ bun add @tokenring-ai/aws
 - `@tokenring-ai/agent`: 0.2.0
 - `@tokenring-ai/app`: 0.2.0
 - `@tokenring-ai/chat`: 0.2.0
-- `@aws-sdk/client-s3`: ^3.1009.0
-- `@aws-sdk/client-sts`: ^3.1009.0
+- `@aws-sdk/client-s3`: ^3.1017.0
+- `@aws-sdk/client-sts`: ^3.1017.0
 - `@tokenring-ai/filesystem`: 0.2.0
 - `@tokenring-ai/utility`: 0.2.0
 - `zod`: ^4.3.6
@@ -150,8 +150,6 @@ async getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: st
 
 **Throws:** Error if credentials are not configured or STS call fails
 
-**Implementation Note:** This method logs errors to the console before re-throwing them.
-
 #### `status(agent)`
 
 Reports the current status of the AWSService.
@@ -242,10 +240,9 @@ View current AWS authentication status and account information.
 ```typescript
 {
   name: "aws status",
-    description
-:
-  "View current AWS authentication status",
-  execute: (remainder: string, agent: Agent) => Promise<string>,
+  description: "View current AWS authentication status",
+  inputSchema: {} as const,
+  execute: ({agent}) => Promise<string>,
   help: string
 }
 ```
@@ -641,8 +638,6 @@ async getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: st
 }
 ```
 
-**Implementation Note:** Errors are logged to the console before being re-thrown.
-
 ### Tool Execution Errors
 
 Tool errors are wrapped with tool-name prefixes for clear error attribution:
@@ -697,13 +692,14 @@ pkg/aws/
 ├── index.ts                     # Main exports (AWSService)
 ├── AWSService.ts                # Core service class implementing TokenRingService
 ├── plugin.ts                    # Token Ring plugin registration and service setup
+├── schema.ts                    # Configuration schema definition
 ├── tools.ts                     # Barrel export for all tools
 ├── tools/
 │   └── listS3BucketsTool.ts     # S3 bucket listing tool
 ├── commands.ts                  # Barrel export for all commands
 ├── commands/
 │   └── awsStatus.ts             # AWS status chat command
-├── schema.ts                    # Configuration schema definition
+├── package.json                 # Package manifest and dependencies
 ├── vitest.config.ts             # Test configuration
 └── LICENSE                      # License file (MIT)
 ```
@@ -789,8 +785,8 @@ The package relies on the following dependencies:
   "@tokenring-ai/app": "0.2.0",
   "@tokenring-ai/agent": "0.2.0",
   "@tokenring-ai/chat": "0.2.0",
-  "@aws-sdk/client-s3": "^3.1009.0",
-  "@aws-sdk/client-sts": "^3.1009.0",
+  "@aws-sdk/client-s3": "^3.1017.0",
+  "@aws-sdk/client-sts": "^3.1017.0",
   "@tokenring-ai/filesystem": "0.2.0",
   "@tokenring-ai/utility": "0.2.0",
   "zod": "^4.3.6"

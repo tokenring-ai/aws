@@ -6,8 +6,8 @@
     "@tokenring-ai/agent": "0.2.0",
     "@tokenring-ai/app": "0.2.0",
     "@tokenring-ai/chat": "0.2.0",
-    "@aws-sdk/client-s3": "^3.1010.0",
-    "@aws-sdk/client-sts": "^3.1010.0",
+    "@aws-sdk/client-s3": "^3.1017.0",
+    "@aws-sdk/client-sts": "^3.1017.0",
     "@tokenring-ai/filesystem": "0.2.0",
     "@tokenring-ai/utility": "0.2.0",
     "zod": "^4.3.6"
@@ -26,7 +26,7 @@
   },
   "type": "module",
   "devDependencies": {
-    "vitest": "^4.1.0",
-    "typescript": "^5.9.3"
+    "vitest": "^4.1.1",
+    "typescript": "^6.0.2"
   }
 }

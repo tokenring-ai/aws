@@ -41,6 +41,9 @@ export default class AWSService implements TokenRingService {
 
   /** Gets or creates an STS client. */
   getSTSClient(): STSClient {
+    if (!this.isAuthenticated()) {
+      throw new Error("AWS credentials are not configured.");
+    }
     if (!this.stsClient) {
       this.stsClient = this.initializeAWSClient(STSClient);
     }
@@ -49,6 +52,9 @@ export default class AWSService implements TokenRingService {
 
   /** Gets or creates an S3 client. */
   getS3Client(): S3Client {
+    if (!this.isAuthenticated()) {
+      throw new Error("AWS credentials are not configured.");
+    }
     if (!this.s3Client) {
       this.s3Client = this.initializeAWSClient(S3Client);
     }
