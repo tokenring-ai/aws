@@ -1,6 +1,6 @@
 {
   "name": "@tokenring-ai/aws",
-  "description": "AWS integration providing authentication status and S3 interaction",
+  "description": "Integration for AWS services, focusing on S3 storage and STS authentication.",
   "version": "0.2.0",
   "dependencies": {
     "@tokenring-ai/agent": "0.2.0",
