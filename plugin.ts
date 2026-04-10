@@ -1,16 +1,16 @@
 import {AgentCommandService} from "@tokenring-ai/agent";
-import {TokenRingPlugin} from "@tokenring-ai/app";
+import type {TokenRingPlugin} from "@tokenring-ai/app";
 import {ChatService} from "@tokenring-ai/chat";
 import {z} from "zod";
 import AWSService from "./AWSService.ts";
 import agentCommands from "./commands.ts";
-import packageJSON from './package.json' with {type: 'json'};
+import packageJSON from "./package.json" with {type: "json"};
 import {AWSConfigSchema} from "./schema.ts";
 import tools from "./tools.ts";
 
 const packageConfigSchema = z.object({
   aws: AWSConfigSchema.optional(),
-})
+});
 
 export default {
   name: packageJSON.name,
@@ -19,14 +19,14 @@ export default {
   description: packageJSON.description,
   install(app, config) {
     if (config.aws) {
-      app.waitForService(ChatService, chatService =>
-        chatService.addTools(tools)
+      app.waitForService(ChatService, (chatService) =>
+        chatService.addTools(tools),
       );
-      app.waitForService(AgentCommandService, agentCommandService =>
-        agentCommandService.addAgentCommands(agentCommands)
+      app.waitForService(AgentCommandService, (agentCommandService) =>
+        agentCommandService.addAgentCommands(agentCommands),
       );
       app.addServices(new AWSService(config.aws));
     }
   },
-  config: packageConfigSchema
+  config: packageConfigSchema,
 } satisfies TokenRingPlugin<typeof packageConfigSchema>;

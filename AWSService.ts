@@ -1,11 +1,11 @@
 import {S3Client} from "@aws-sdk/client-s3";
 import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
-import Agent from "@tokenring-ai/agent/Agent";
+import type Agent from "@tokenring-ai/agent/Agent";
 
-import {TokenRingService} from "@tokenring-ai/app/types";
-import {z} from "zod";
+import type {TokenRingService} from "@tokenring-ai/app/types";
+import type {z} from "zod";
 
-import {AWSConfigSchema} from "./schema.ts";
+import type {AWSConfigSchema} from "./schema.ts";
 
 /**
  * AWSService provides an interface for interacting with various AWS services.
@@ -23,14 +23,25 @@ export default class AWSService implements TokenRingService {
   /**
    * Initializes a generic AWS SDK client.
    */
-  initializeAWSClient<T>(ClientClass: new (config: {
-    region: string;
-    credentials: { accessKeyId: string; secretAccessKey: string; sessionToken?: string }
-  } & Record<string, unknown>) => T, clientConfig: Record<string, unknown> = {}): T {
+  initializeAWSClient<T>(
+    ClientClass: new (
+      config: {
+        region: string;
+        credentials: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken?: string;
+        };
+      } & Record<string, unknown>,
+    ) => T,
+    clientConfig: Record<string, unknown> = {},
+  ): T {
     const credentials = {
       accessKeyId: this.options.accessKeyId,
       secretAccessKey: this.options.secretAccessKey,
-      ...(this.options.sessionToken ? {sessionToken: this.options.sessionToken} : {}),
+      ...(this.options.sessionToken
+        ? {sessionToken: this.options.sessionToken}
+        : {}),
     };
     return new ClientClass({
       region: this.options.region,
@@ -63,11 +74,19 @@ export default class AWSService implements TokenRingService {
 
   /** Checks if credentials and region are configured. */
   isAuthenticated(): boolean {
-    return !!(this.options.accessKeyId && this.options.secretAccessKey && this.options.region);
+    return !!(
+      this.options.accessKeyId &&
+      this.options.secretAccessKey &&
+      this.options.region
+    );
   }
 
   /** Retrieves the caller identity using AWS STS. */
-  async getCallerIdentity(): Promise<{ Arn?: string; Account?: string; UserId?: string }> {
+  async getCallerIdentity(): Promise<{
+    Arn?: string;
+    Account?: string;
+    UserId?: string;
+  }> {
     if (!this.isAuthenticated()) {
       throw new Error("AWS credentials are not configured.");
     }
