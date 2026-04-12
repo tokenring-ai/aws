@@ -1,6 +1,6 @@
 import {ListBucketsCommand} from "@aws-sdk/client-s3";
 import type Agent from "@tokenring-ai/agent/Agent";
-import type {TokenRingToolDefinition} from "@tokenring-ai/chat/schema";
+import type {TokenRingToolDefinition, TokenRingToolResult} from "@tokenring-ai/chat/schema";
 import {z} from "zod";
 import AWSService from "../AWSService.ts";
 
@@ -16,7 +16,7 @@ const inputSchema = z.object({});
  * Returns a JSON object containing the buckets array.
  * Errors are thrown with a message prefixed by the tool name.
  */
-async function execute(_args: z.output<typeof inputSchema>, agent: Agent) {
+async function execute(_args: z.output<typeof inputSchema>, agent: Agent): Promise<TokenRingToolResult> {
   const awsService = agent.requireServiceByType(AWSService);
 
   if (!awsService.isAuthenticated()) {
@@ -31,7 +31,7 @@ async function execute(_args: z.output<typeof inputSchema>, agent: Agent) {
       Name: bucket.Name,
       CreationDate: bucket.CreationDate,
     }));
-    return {type: "json" as const, data: {buckets}};
+    return JSON.stringify({buckets});
   } catch (error: any) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`[${name}] Failed to list S3 buckets: ${message}`);
