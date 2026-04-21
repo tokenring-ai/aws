@@ -1,11 +1,11 @@
-import {S3Client} from "@aws-sdk/client-s3";
-import {GetCallerIdentityCommand, STSClient} from "@aws-sdk/client-sts";
+import { S3Client } from "@aws-sdk/client-s3";
+import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import type Agent from "@tokenring-ai/agent/Agent";
 
-import type {TokenRingService} from "@tokenring-ai/app/types";
-import type {z} from "zod";
+import type { TokenRingService } from "@tokenring-ai/app/types";
+import type { z } from "zod";
 
-import type {AWSConfigSchema} from "./schema.ts";
+import type { AWSConfigSchema } from "./schema.ts";
 
 /**
  * AWSService provides an interface for interacting with various AWS services.
@@ -17,8 +17,7 @@ export default class AWSService implements TokenRingService {
   private stsClient?: STSClient;
   private s3Client?: S3Client;
 
-  constructor(readonly options: z.output<typeof AWSConfigSchema>) {
-  }
+  constructor(readonly options: z.output<typeof AWSConfigSchema>) {}
 
   /**
    * Initializes a generic AWS SDK client.
@@ -39,9 +38,7 @@ export default class AWSService implements TokenRingService {
     const credentials = {
       accessKeyId: this.options.accessKeyId,
       secretAccessKey: this.options.secretAccessKey,
-      ...(this.options.sessionToken
-        ? {sessionToken: this.options.sessionToken}
-        : {}),
+      ...(this.options.sessionToken ? { sessionToken: this.options.sessionToken } : {}),
     };
     return new ClientClass({
       region: this.options.region,
@@ -74,18 +71,14 @@ export default class AWSService implements TokenRingService {
 
   /** Checks if credentials and region are configured. */
   isAuthenticated(): boolean {
-    return !!(
-      this.options.accessKeyId &&
-      this.options.secretAccessKey &&
-      this.options.region
-    );
+    return !!(this.options.accessKeyId && this.options.secretAccessKey && this.options.region);
   }
 
   /** Retrieves the caller identity using AWS STS. */
   async getCallerIdentity(): Promise<{
-    Arn?: string;
-    Account?: string;
-    UserId?: string;
+    Arn?: string | undefined;
+    Account?: string | undefined;
+    UserId?: string | undefined;
   }> {
     if (!this.isAuthenticated()) {
       throw new Error("AWS credentials are not configured.");
@@ -105,8 +98,8 @@ export default class AWSService implements TokenRingService {
     active: boolean;
     service: string;
     authenticated: boolean;
-    accountInfo?: { Arn?: string; Account?: string; UserId?: string };
-    error?: string;
+    accountInfo?: { Arn?: string | undefined; Account?: string | undefined; UserId?: string | undefined };
+    error?: string | undefined;
   }> {
     try {
       const identity = await this.getCallerIdentity();

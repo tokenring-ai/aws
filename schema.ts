@@ -4,7 +4,7 @@ export const AWSConfigSchema = z
   .object({
     accessKeyId: z.string(),
     secretAccessKey: z.string(),
-    sessionToken: z.string().optional(),
+    sessionToken: z.string().exactOptional(),
     region: z.string(),
   })
   .strict();

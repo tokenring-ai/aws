@@ -1,1 +1,1 @@
-export {default as AWSService} from "./AWSService.ts";
+export { default as AWSService } from "./AWSService.ts";

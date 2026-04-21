@@ -1,13 +1,12 @@
-import {ListBucketsCommand} from "@aws-sdk/client-s3";
+import { ListBucketsCommand } from "@aws-sdk/client-s3";
 import type Agent from "@tokenring-ai/agent/Agent";
-import type {TokenRingToolDefinition, TokenRingToolResult} from "@tokenring-ai/chat/schema";
-import {z} from "zod";
+import type { TokenRingToolDefinition, TokenRingToolResult } from "@tokenring-ai/chat/schema";
+import { z } from "zod";
 import AWSService from "../AWSService.ts";
 
 const name = "aws_listS3Buckets";
 const displayName = "Aws/listS3BucketsTool";
-const description =
-  "Lists all S3 buckets in the configured AWS account and region.";
+const description = "Lists all S3 buckets in the configured AWS account and region.";
 const inputSchema = z.object({});
 
 /**
@@ -31,7 +30,7 @@ async function execute(_args: z.output<typeof inputSchema>, agent: Agent): Promi
       Name: bucket.Name,
       CreationDate: bucket.CreationDate,
     }));
-    return JSON.stringify({buckets});
+    return JSON.stringify({ buckets });
   } catch (error: any) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`[${name}] Failed to list S3 buckets: ${message}`);
