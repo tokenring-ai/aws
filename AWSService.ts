@@ -3,6 +3,7 @@ import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import type Agent from "@tokenring-ai/agent/Agent";
 
 import type { TokenRingService } from "@tokenring-ai/app/types";
+import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import type { z } from "zod";
 
 import type { AWSConfigSchema } from "./schema.ts";
@@ -109,12 +110,12 @@ export default class AWSService implements TokenRingService {
         authenticated: true,
         accountInfo: identity,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         active: false,
         service: "AWSService",
         authenticated: false,
-        error: error.message,
+        error: errorAsString(error),
       };
     }
   }

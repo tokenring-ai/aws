@@ -31,7 +31,7 @@ async function execute(_args: z.output<typeof inputSchema>, agent: Agent): Promi
       CreationDate: bucket.CreationDate,
     }));
     return JSON.stringify({ buckets });
-  } catch (error: any) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`[${name}] Failed to list S3 buckets: ${message}`);
   }
