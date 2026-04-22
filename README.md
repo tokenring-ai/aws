@@ -33,15 +33,15 @@ bun add @tokenring-ai/aws
 
 ## Dependencies
 
-| Package | Version | Purpose |
-| :--- | :--- | :--- |
-| `@tokenring-ai/agent` | 0.2.0 | Agent framework for tool execution |
-| `@tokenring-ai/app` | 0.2.0 | Application framework for plugins |
-| `@tokenring-ai/chat` | 0.2.0 | Chat service for tool registration |
-| `@aws-sdk/client-s3` | ^3.1017.0 | S3 service client |
-| `@aws-sdk/client-sts` | ^3.1017.0 | STS service client |
-| `@tokenring-ai/utility` | 0.2.0 | Utility functions |
-| `zod` | ^4.3.6 | Runtime type validation |
+| Package                 | Version   | Purpose                            |
+|:------------------------|:----------|:-----------------------------------|
+| `@tokenring-ai/agent`   | 0.2.0     | Agent framework for tool execution |
+| `@tokenring-ai/app`     | 0.2.0     | Application framework for plugins  |
+| `@tokenring-ai/chat`    | 0.2.0     | Chat service for tool registration |
+| `@aws-sdk/client-s3`    | ^3.1025.0 | S3 service client                  |
+| `@aws-sdk/client-sts`   | ^3.1025.0 | STS service client                 |
+| `@tokenring-ai/utility` | 0.2.0     | Utility functions                  |
+| `zod`                   | ^4.3.6    | Runtime type validation            |
 
 ## Features
 
@@ -57,8 +57,8 @@ bun add @tokenring-ai/aws
 
 ## Chat Commands
 
-| Command | Description |
-| :--- | :--- |
+| Command      | Description                            |
+|:-------------|:---------------------------------------|
 | `aws status` | View current AWS authentication status |
 
 ### aws status
@@ -83,8 +83,8 @@ AWS Authentication Status:
 
 ## Tools
 
-| Tool | Description |
-| :--- | :--- |
+| Tool                | Description                                        |
+|:--------------------|:---------------------------------------------------|
 | `aws_listS3Buckets` | Lists all S3 buckets in the configured AWS account |
 
 ### aws_listS3Buckets
@@ -125,23 +125,23 @@ import {z} from "zod";
 export const AWSConfigSchema = z.object({
   accessKeyId: z.string(),
   secretAccessKey: z.string(),
-  sessionToken: z.string().optional(),
+  sessionToken: z.string().exactOptional(),
   region: z.string(),
 }).strict();
 ```
 
 ### Required Configuration Parameters
 
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `accessKeyId` | string | AWS Access Key ID for authentication |
+| Parameter         | Type   | Description                              |
+|:------------------|:-------|:-----------------------------------------|
+| `accessKeyId`     | string | AWS Access Key ID for authentication     |
 | `secretAccessKey` | string | AWS Secret Access Key for authentication |
-| `region` | string | AWS region (e.g., 'us-east-1') |
+| `region`          | string | AWS region (e.g., 'us-east-1')           |
 
 ### Optional Configuration Parameters
 
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
+| Parameter      | Type   | Description                                 |
+|:---------------|:-------|:--------------------------------------------|
 | `sessionToken` | string | AWS session token for temporary credentials |
 
 ### Configuration Example
@@ -183,7 +183,7 @@ aws:
 The recommended way to use the AWS package is via the plugin system:
 
 ```typescript
-import {TokenRingApp} from "@tokenring-ai/app";
+import { TokenRingApp } from "@tokenring-ai/app";
 import awsPlugin from "@tokenring-ai/aws";
 
 const app = new TokenRingApp();
@@ -250,7 +250,7 @@ result.data.buckets.forEach((bucket) => {
 Via Service:
 
 ```typescript
-import {ListBucketsCommand} from "@aws-sdk/client-s3";
+import { ListBucketsCommand } from "@aws-sdk/client-s3";
 
 const s3Client = awsService.getS3Client();
 const command = new ListBucketsCommand({});
@@ -353,14 +353,14 @@ export default class AWSService implements TokenRingService {
 
 **Method Signatures:**
 
-| Method | Description | Parameters | Returns |
-| :--- | :--- | :--- | :--- |
-| `initializeAWSClient` | Initializes a generic AWS SDK client | `ClientClass`, `clientConfig` | Initialized AWS SDK client |
-| `getSTSClient` | Gets or creates the STS client singleton | None | `STSClient` instance |
-| `getS3Client` | Gets or creates the S3 client singleton | None | `S3Client` instance |
-| `isAuthenticated` | Checks if credentials and region configured | None | `boolean` |
-| `getCallerIdentity` | Retrieves AWS account info via STS | None | Promise with account info |
-| `status` | Reports service status | `_agent` | Promise with status object |
+| Method                | Description                                 | Parameters                    | Returns                    |
+|:----------------------|:--------------------------------------------|:------------------------------|:---------------------------|
+| `initializeAWSClient` | Initializes a generic AWS SDK client        | `ClientClass`, `clientConfig` | Initialized AWS SDK client |
+| `getSTSClient`        | Gets or creates the STS client singleton    | None                          | `STSClient` instance       |
+| `getS3Client`         | Gets or creates the S3 client singleton     | None                          | `S3Client` instance        |
+| `isAuthenticated`     | Checks if credentials and region configured | None                          | `boolean`                  |
+| `getCallerIdentity`   | Retrieves AWS account info via STS          | None                          | Promise with account info  |
+| `status`              | Reports service status                      | `_agent`                      | Promise with status object |
 
 **Detailed Method Documentation:**
 
@@ -477,7 +477,7 @@ async status(_agent: Agent): Promise<{
 The AWS plugin automatically registers components when configured:
 
 ```typescript
-import {TokenRingApp} from "@tokenring-ai/app";
+import { TokenRingApp } from "@tokenring-ai/app";
 import awsPlugin from "@tokenring-ai/aws";
 
 const app = new TokenRingApp();
@@ -630,17 +630,17 @@ async execute(remainder: string, agent: Agent) {
 
 ### Common Error Scenarios
 
-| Error | Cause | Resolution |
-| :--- | :--- | :--- |
-| `AWS credentials are not configured.` | Missing credentials | Provide complete configuration |
-| `Failed to get AWS caller identity` | Invalid credentials | Verify credentials and network |
-| `[aws_listS3Buckets] AWS credentials not configured` | Tool without credentials | Configure credentials first |
-| Service returns `authenticated: false` | STS call failed | Check credentials and permissions |
-| `[aws_listS3Buckets] Failed to list S3 buckets` | AWS S3 service error | Review AWS S3 documentation |
+| Error                                                | Cause                          | Resolution                        |
+|:-----------------------------------------------------|:-------------------------------|:----------------------------------|
+| `AWS credentials are not configured.`                | Missing credentials in service | Provide complete configuration    |
+| `Failed to get AWS caller identity`                  | Invalid credentials            | Verify credentials and network    |
+| `[aws_listS3Buckets] AWS credentials not configured` | Tool without credentials       | Configure credentials first       |
+| Service returns `authenticated: false`               | STS call failed                | Check credentials and permissions |
+| `[aws_listS3Buckets] Failed to list S3 buckets`      | AWS S3 service error           | Review AWS S3 documentation       |
 
 ## Package Structure
 
-```
+```text
 pkg/aws/
 ├── README.md                    # Documentation
 ├── index.ts                     # Main exports (AWSService)
@@ -722,13 +722,13 @@ bun run eslint
 
 ### Package Scripts
 
-| Script | Description |
-| :--- | :--- |
-| `test` | Run all tests with vitest |
-| `test:watch` | Run tests in watch mode |
+| Script          | Description                   |
+|:----------------|:------------------------------|
+| `test`          | Run all tests with vitest     |
+| `test:watch`    | Run tests in watch mode       |
 | `test:coverage` | Generate test coverage report |
-| `build` | Run TypeScript type checking |
-| `eslint` | Fix ESLint formatting issues |
+| `build`         | Run TypeScript type checking  |
+| `eslint`        | Fix ESLint formatting issues  |
 
 ## Related Components
 
