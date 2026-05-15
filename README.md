@@ -33,15 +33,15 @@ bun add @tokenring-ai/aws
 
 ## Dependencies
 
-| Package                 | Version   | Purpose                            |
-|:------------------------|:----------|:-----------------------------------|
-| `@tokenring-ai/agent`   | 0.2.0     | Agent framework for tool execution |
-| `@tokenring-ai/app`     | 0.2.0     | Application framework for plugins  |
-| `@tokenring-ai/chat`    | 0.2.0     | Chat service for tool registration |
-| `@aws-sdk/client-s3`    | ^3.1025.0 | S3 service client                  |
-| `@aws-sdk/client-sts`   | ^3.1025.0 | STS service client                 |
-| `@tokenring-ai/utility` | 0.2.0     | Utility functions                  |
-| `zod`                   | ^4.3.6    | Runtime type validation            |
+| Package                 | Version      | Purpose                            |
+|:------------------------|:-------------|:-----------------------------------|
+| `@tokenring-ai/agent`   | workspace:*  | Agent framework for tool execution |
+| `@tokenring-ai/app`     | workspace:*  | Application framework for plugins  |
+| `@tokenring-ai/chat`    | workspace:*  | Chat service for tool registration |
+| `@aws-sdk/client-s3`    | ^3.1025.0    | S3 service client                  |
+| `@aws-sdk/client-sts`   | ^3.1025.0    | STS service client                 |
+| `@tokenring-ai/utility` | workspace:*  | Utility functions                  |
+| `zod`                   | ^4.3.6       | Runtime type validation            |
 
 ## Features
 
@@ -63,11 +63,11 @@ bun add @tokenring-ai/aws
 
 ### aws status
 
-View current AWS authentication status and account information.
+View current AWS authentication status and account information including account ID, ARN, user ID, and configured region.
 
 **Usage:**
 
-```bash
+```text
 aws status
 ```
 
@@ -81,19 +81,47 @@ AWS Authentication Status:
   Region: us-east-1
 ```
 
+**Help Text:**
+
+```text
+aws status - View current AWS authentication status
+
+View current AWS authentication status and account information including account ID, ARN, user ID, and configured region.
+
+## Examples
+
+aws status      # Display current AWS authentication status
+
+## Configuration
+
+Ensure AWS credentials are properly configured in the AWSService with:
+- **accessKeyId**: Your AWS Access Key ID
+- **secretAccessKey**: Your AWS Secret Access Key
+- **region**: Your AWS region (e.g., 'us-east-1')
+- **sessionToken**: Optional AWS Session Token (if using temporary credentials)
+```
+
 ## Tools
 
 | Tool                | Description                                        |
 |:--------------------|:---------------------------------------------------|
-| `aws_listS3Buckets` | Lists all S3 buckets in the configured AWS account |
+| `aws_listS3Buckets` | Lists all S3 buckets in the configured AWS account and region |
 
 ### aws_listS3Buckets
 
 Lists all S3 buckets in the configured AWS account and region.
 
+**Tool Details:**
+
+| Field         | Value                        |
+|:--------------|:-----------------------------|
+| Name          | `aws_listS3Buckets`          |
+| Display Name  | `Aws/listS3BucketsTool`      |
+| Description   | Lists all S3 buckets in the configured AWS account and region |
+
 **Input Schema:** Empty object (no parameters required)
 
-**Returns:** JSON object containing buckets array:
+**Returns:** JSON string containing buckets array:
 
 ```json
 {
@@ -163,7 +191,9 @@ aws:
   region: us-east-1
 ```
 
-### Environment Variable Configuration
+### Environment Variables
+
+The package does not automatically load environment variables. You must explicitly read environment variables and pass them to the configuration:
 
 ```typescript
 {
@@ -171,10 +201,19 @@ aws:
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
     sessionToken: process.env.AWS_SESSION_TOKEN,
-    region: process.env.AWS_REGION || 'us-east-1'
+    region: process.env.AWS_REGION!
   }
 }
 ```
+
+Common environment variables used for AWS configuration:
+
+| Variable                    | Description                                           | Example                                        |
+|:----------------------------|:------------------------------------------------------|:-----------------------------------------------|
+| `AWS_ACCESS_KEY_ID`         | AWS Access Key ID for authentication                  | `AKIAIOSFODNN7EXAMPLE`                         |
+| `AWS_SECRET_ACCESS_KEY`     | AWS Secret Access Key for authentication              | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`    |
+| `AWS_SESSION_TOKEN`         | AWS session token for temporary credentials           | `IQoJb3JpZ2luI...`                            |
+| `AWS_REGION`                | AWS region                                            | `us-east-1`                                    |
 
 ## Usage Examples
 
@@ -192,7 +231,7 @@ app.install(awsPlugin, {
   aws: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-    region: process.env.AWS_REGION || 'us-east-1'
+    region: process.env.AWS_REGION!  // Required - no default value
   }
 });
 
@@ -353,14 +392,14 @@ export default class AWSService implements TokenRingService {
 
 **Method Signatures:**
 
-| Method                | Description                                 | Parameters                    | Returns                    |
-|:----------------------|:--------------------------------------------|:------------------------------|:---------------------------|
-| `initializeAWSClient` | Initializes a generic AWS SDK client        | `ClientClass`, `clientConfig` | Initialized AWS SDK client |
-| `getSTSClient`        | Gets or creates the STS client singleton    | None                          | `STSClient` instance       |
-| `getS3Client`         | Gets or creates the S3 client singleton     | None                          | `S3Client` instance        |
-| `isAuthenticated`     | Checks if credentials and region configured | None                          | `boolean`                  |
-| `getCallerIdentity`   | Retrieves AWS account info via STS          | None                          | Promise with account info  |
-| `status`              | Reports service status                      | `_agent`                      | Promise with status object |
+| Method                  | Description                                 | Parameters                    | Returns                                      |
+|:------------------------|:--------------------------------------------|:------------------------------|:---------------------------------------------|
+| `initializeAWSClient`   | Initializes a generic AWS SDK client        | `ClientClass`, `clientConfig` | Initialized AWS SDK client instance          |
+| `getSTSClient`          | Gets or creates the STS client singleton    | None                          | `STSClient` instance                         |
+| `getS3Client`           | Gets or creates the S3 client singleton     | None                          | `S3Client` instance                          |
+| `isAuthenticated`       | Checks if credentials and region configured | None                          | `boolean`                                    |
+| `getCallerIdentity`     | Retrieves AWS account info via STS          | None                          | `Promise<{ Arn?, Account?, UserId? }>`       |
+| `status`                | Reports service status                      | `_agent: Agent`               | `Promise<{ active, service, authenticated, accountInfo?, error? }>` |
 
 **Detailed Method Documentation:**
 
@@ -486,7 +525,7 @@ app.install(awsPlugin, {
   aws: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-    region: process.env.AWS_REGION || 'us-east-1'
+    region: process.env.AWS_REGION!  // Required - no default value
   }
 });
 ```
@@ -598,7 +637,7 @@ async execute(_args: {}, agent: Agent) {
   const awsService = agent.requireServiceByType(AWSService);
 
   if (!awsService.isAuthenticated()) {
-    throw new Error(`[${name}] AWS credentials not configured.`);
+    throw new Error(`[${name}] AWS credentials not configured in AWSService.`);
   }
 
   try {
@@ -630,13 +669,13 @@ async execute(remainder: string, agent: Agent) {
 
 ### Common Error Scenarios
 
-| Error                                                | Cause                          | Resolution                        |
-|:-----------------------------------------------------|:-------------------------------|:----------------------------------|
-| `AWS credentials are not configured.`                | Missing credentials in service | Provide complete configuration    |
-| `Failed to get AWS caller identity`                  | Invalid credentials            | Verify credentials and network    |
-| `[aws_listS3Buckets] AWS credentials not configured` | Tool without credentials       | Configure credentials first       |
-| Service returns `authenticated: false`               | STS call failed                | Check credentials and permissions |
-| `[aws_listS3Buckets] Failed to list S3 buckets`      | AWS S3 service error           | Review AWS S3 documentation       |
+| Error                                                            | Cause                          | Resolution                        |
+|:-----------------------------------------------------------------|:-------------------------------|:----------------------------------|
+| `AWS credentials are not configured.`                            | Missing credentials in service | Provide complete configuration    |
+| `Failed to get AWS caller identity`                              | Invalid credentials            | Verify credentials and network    |
+| `[aws_listS3Buckets] AWS credentials not configured in AWSService` | Tool without credentials     | Configure credentials first       |
+| Service returns `authenticated: false`                           | STS call failed                | Check credentials and permissions |
+| `[aws_listS3Buckets] Failed to list S3 buckets: <message>`       | AWS S3 service error           | Review AWS S3 documentation       |
 
 ## Package Structure
 

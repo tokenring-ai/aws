@@ -17,7 +17,7 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
     ];
     return lines.join("\n");
   } catch (error: unknown) {
-    throw new CommandFailedError(`Failed to get AWS caller identity: ${error instanceof Error ? error.message : String(error)}`);
+    throw new CommandFailedError(`Failed to get AWS caller identity: ${Error.isError(error) ? error.message : String(error)}`);
   }
 }
 
