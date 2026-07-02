@@ -6,10 +6,10 @@
     "@tokenring-ai/agent": "workspace:*",
     "@tokenring-ai/app": "workspace:*",
     "@tokenring-ai/chat": "workspace:*",
-    "@aws-sdk/client-s3": "^3.1025.0",
-    "@aws-sdk/client-sts": "^3.1025.0",
+    "@aws-sdk/client-s3": "^3.1075.0",
+    "@aws-sdk/client-sts": "^3.1075.0",
     "@tokenring-ai/utility": "workspace:*",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "exports": {
     ".": "./index.ts",
