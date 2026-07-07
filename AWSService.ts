@@ -1,9 +1,8 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import type Agent from "@tokenring-ai/agent/Agent";
-
 import type { TokenRingService } from "@tokenring-ai/app/types";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import { ConfigurationError } from "@tokenring-ai/app/types";
 import type { z } from "zod";
 
 import type { AWSConfigSchema } from "./schema.ts";
@@ -51,7 +50,7 @@ export default class AWSService implements TokenRingService {
   /** Gets or creates an STS client. */
   getSTSClient(): STSClient {
     if (!this.isAuthenticated()) {
-      throw new Error("AWS credentials are not configured.");
+      throw new ConfigurationError(this.name, "AWS credentials are not configured.");
     }
     if (!this.stsClient) {
       this.stsClient = this.initializeAWSClient(STSClient);
@@ -62,7 +61,7 @@ export default class AWSService implements TokenRingService {
   /** Gets or creates an S3 client. */
   getS3Client(): S3Client {
     if (!this.isAuthenticated()) {
-      throw new Error("AWS credentials are not configured.");
+      throw new ConfigurationError(this.name, "AWS credentials are not configured.");
     }
     if (!this.s3Client) {
       this.s3Client = this.initializeAWSClient(S3Client);
@@ -82,7 +81,7 @@ export default class AWSService implements TokenRingService {
     UserId?: string | undefined;
   }> {
     if (!this.isAuthenticated()) {
-      throw new Error("AWS credentials are not configured.");
+      throw new ConfigurationError(this.name, "AWS credentials are not configured.");
     }
     const stsClient = this.getSTSClient();
     const command = new GetCallerIdentityCommand({});
@@ -96,27 +95,17 @@ export default class AWSService implements TokenRingService {
 
   /** Reports the status of the service. */
   async status(_agent: Agent): Promise<{
-    active: boolean;
+    active: true;
     service: string;
     authenticated: boolean;
     accountInfo?: { Arn?: string | undefined; Account?: string | undefined; UserId?: string | undefined };
-    error?: string | undefined;
   }> {
-    try {
-      const identity = await this.getCallerIdentity();
-      return {
-        active: true,
-        service: "AWSService",
-        authenticated: true,
-        accountInfo: identity,
-      };
-    } catch (error) {
-      return {
-        active: false,
-        service: "AWSService",
-        authenticated: false,
-        error: errorAsString(error),
-      };
-    }
+    const identity = await this.getCallerIdentity();
+    return {
+      active: true,
+      service: "AWSService",
+      authenticated: true,
+      accountInfo: identity,
+    };
   }
 }

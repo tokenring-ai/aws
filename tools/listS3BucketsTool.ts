@@ -1,6 +1,7 @@
 import { ListBucketsCommand } from "@aws-sdk/client-s3";
 import type Agent from "@tokenring-ai/agent/Agent";
 import type { TokenRingToolDefinition, TokenRingToolResult } from "@tokenring-ai/chat/schema";
+import { ToolCallError } from "@tokenring-ai/chat/util/tokenRingTool";
 import { z } from "zod";
 import AWSService from "../AWSService.ts";
 
@@ -19,21 +20,20 @@ async function execute(_args: z.output<typeof inputSchema>, agent: Agent): Promi
   const awsService = agent.requireServiceByType(AWSService);
 
   if (!awsService.isAuthenticated()) {
-    throw new Error(`[${name}] AWS credentials not configured in AWSService.`);
+    throw new ToolCallError(name, `AWS credentials not configured in AWSService.`);
   }
 
   try {
     const s3Client = awsService.getS3Client();
     const command = new ListBucketsCommand({});
-    const response: any = await s3Client.send(command);
-    const buckets = (response.Buckets ?? []).map((bucket: any) => ({
+    const response = await s3Client.send(command);
+    const buckets = (response.Buckets ?? []).map(bucket => ({
       Name: bucket.Name,
       CreationDate: bucket.CreationDate,
     }));
     return JSON.stringify({ buckets });
-  } catch (error) {
-    const message = Error.isError(error) ? error.message : String(error);
-    throw new Error(`[${name}] Failed to list S3 buckets: ${message}`);
+  } catch (err) {
+    throw new ToolCallError(name, `Failed to list S3 buckets`, { cause: err });
   }
 }
 

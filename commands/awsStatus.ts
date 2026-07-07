@@ -16,8 +16,8 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
       indent([`Account: ${identity.Account}`, `Arn: ${identity.Arn}`, `UserId: ${identity.UserId}`, `Region: ${awsService.options.region}`], 1),
     ];
     return lines.join("\n");
-  } catch (error: unknown) {
-    throw new CommandFailedError(`Failed to get AWS caller identity: ${Error.isError(error) ? error.message : String(error)}`);
+  } catch (err) {
+    throw new CommandFailedError("Failed to get AWS caller identity", { cause: err });
   }
 }
 
