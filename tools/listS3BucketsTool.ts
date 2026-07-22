@@ -31,7 +31,10 @@ async function execute(_args: z.output<typeof inputSchema>, agent: Agent): Promi
       Name: bucket.Name,
       CreationDate: bucket.CreationDate,
     }));
-    return JSON.stringify({ buckets });
+    return {
+      message: `**Amazon S3** Listed ${buckets.length} buckets`,
+      result: JSON.stringify({ buckets }),
+    };
   } catch (err) {
     throw new ToolCallError(name, `Failed to list S3 buckets`, { cause: err });
   }

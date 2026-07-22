@@ -693,7 +693,6 @@ pkg/aws/
 ├── commands/
 │   └── awsStatus.ts             # AWS status chat command
 ├── package.json                 # Package manifest
-├── vitest.config.ts             # Test configuration
 └── LICENSE                      # License file (MIT)
 ```
 
@@ -740,8 +739,6 @@ pkg/aws/
 
 ### Running Tests
 
-The package includes comprehensive test coverage using vitest:
-
 ```bash
 # Run all tests
 bun run test
@@ -763,7 +760,7 @@ bun run eslint
 
 | Script          | Description                   |
 |:----------------|:------------------------------|
-| `test`          | Run all tests with vitest     |
+| `test`          | Run all tests with bun test   |
 | `test:watch`    | Run tests in watch mode       |
 | `test:coverage` | Generate test coverage report |
 | `build`         | Run TypeScript type checking  |
