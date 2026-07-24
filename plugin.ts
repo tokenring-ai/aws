@@ -24,5 +24,5 @@ export default {
       app.addServices(new AWSService(config.aws));
     }
   },
-  config: packageConfigSchema,
+  configSchema: packageConfigSchema,
 } satisfies TokenRingPlugin<typeof packageConfigSchema>;
