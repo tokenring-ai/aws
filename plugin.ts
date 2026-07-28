@@ -17,11 +17,14 @@ export default {
   displayName: "AWS Integration",
   version: packageJSON.version,
   description: packageJSON.description,
-  install(app, config) {
+  install(app) {
+    app.addServices(new AWSService());
+    app.waitForService(ChatService, chatService => chatService.addTools(...tools));
+    app.waitForService(AgentCommandService, agentCommandService => agentCommandService.addAgentCommands(agentCommands));
+  },
+  reconfigure(app, config) {
     if (config.aws) {
-      app.waitForService(ChatService, chatService => chatService.addTools(...tools));
-      app.waitForService(AgentCommandService, agentCommandService => agentCommandService.addAgentCommands(agentCommands));
-      app.addServices(new AWSService(config.aws));
+      app.requireService(AWSService).reconfigure(config.aws);
     }
   },
   configSchema: packageConfigSchema,

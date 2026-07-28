@@ -14,10 +14,26 @@ import type { AWSConfigSchema } from "./schema.ts";
 export default class AWSService implements TokenRingService {
   readonly name = "AWSService";
   description = "Provides AWS functionality";
-  private stsClient?: STSClient;
-  private s3Client?: S3Client;
+  private stsClient: STSClient | undefined;
+  private s3Client: S3Client | undefined;
+  private options: z.output<typeof AWSConfigSchema> | undefined;
 
-  constructor(readonly options: z.output<typeof AWSConfigSchema>) {}
+  constructor(options?: z.output<typeof AWSConfigSchema>) {
+    if (options) this.options = options;
+  }
+
+  reconfigure(options: z.output<typeof AWSConfigSchema>): void {
+    this.options = options;
+    this.stsClient = undefined;
+    this.s3Client = undefined;
+  }
+
+  getRegion(): string {
+    if (!this.options) {
+      throw new ConfigurationError(this.name, "AWS credentials are not configured.");
+    }
+    return this.options.region;
+  }
 
   /**
    * Initializes a generic AWS SDK client.
@@ -35,6 +51,9 @@ export default class AWSService implements TokenRingService {
     ) => T,
     clientConfig: Record<string, unknown> = {},
   ): T {
+    if (!this.options) {
+      throw new ConfigurationError(this.name, "AWS credentials are not configured.");
+    }
     const credentials = {
       accessKeyId: this.options.accessKeyId,
       secretAccessKey: this.options.secretAccessKey,
@@ -71,7 +90,7 @@ export default class AWSService implements TokenRingService {
 
   /** Checks if credentials and region are configured. */
   isAuthenticated(): boolean {
-    return !!(this.options.accessKeyId && this.options.secretAccessKey && this.options.region);
+    return !!(this.options?.accessKeyId && this.options.secretAccessKey && this.options.region);
   }
 
   /** Retrieves the caller identity using AWS STS. */

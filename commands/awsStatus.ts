@@ -13,7 +13,7 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
     const identity = await awsService.getCallerIdentity();
     const lines: string[] = [
       "AWS Authentication Status:",
-      indent([`Account: ${identity.Account}`, `Arn: ${identity.Arn}`, `UserId: ${identity.UserId}`, `Region: ${awsService.options.region}`], 1),
+      indent([`Account: ${identity.Account}`, `Arn: ${identity.Arn}`, `UserId: ${identity.UserId}`, `Region: ${awsService.getRegion()}`], 1),
     ];
     return lines.join("\n");
   } catch (err) {
