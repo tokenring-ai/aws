@@ -8,7 +8,7 @@ const description = "View current AWS authentication status";
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
 async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
-  const awsService = agent.requireServiceByType(AWSService);
+  const awsService = agent.requireService(AWSService);
   try {
     const identity = await awsService.getCallerIdentity();
     const lines: string[] = [

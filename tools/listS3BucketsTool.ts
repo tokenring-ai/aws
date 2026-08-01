@@ -17,7 +17,7 @@ const inputSchema = z.object({});
  * Errors are thrown with a message prefixed by the tool name.
  */
 async function execute(_args: z.output<typeof inputSchema>, agent: Agent): Promise<TokenRingToolResult> {
-  const awsService = agent.requireServiceByType(AWSService);
+  const awsService = agent.requireService(AWSService);
 
   if (!awsService.isAuthenticated()) {
     throw new ToolCallError(name, `AWS credentials not configured in AWSService.`);

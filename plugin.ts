@@ -18,8 +18,8 @@ export default {
   version: packageJSON.version,
   description: packageJSON.description,
   install(app) {
-    app.addServices(new AWSService());
-    app.waitForService(ChatService, chatService => chatService.addTools(...tools));
+    app.addService(new AWSService());
+    app.waitForService(ChatService, chatService => chatService.addTools(tools));
     app.waitForService(AgentCommandService, agentCommandService => agentCommandService.addAgentCommands(agentCommands));
   },
   reconfigure(app, config) {

@@ -546,7 +546,7 @@ Agents can access the AWSService directly:
 import AWSService from "@tokenring-ai/aws";
 
 const agent = app.createAgent();
-const awsService = agent.requireServiceByType(AWSService);
+const awsService = agent.requireService(AWSService);
 
 // Check authentication
 if (awsService.isAuthenticated()) {
@@ -634,7 +634,7 @@ Tool errors are wrapped with tool-name prefixes for clear error attribution:
 
 ```typescript
 async execute(_args: {}, agent: Agent) {
-  const awsService = agent.requireServiceByType(AWSService);
+  const awsService = agent.requireService(AWSService);
 
   if (!awsService.isAuthenticated()) {
     throw new Error(`[${name}] AWS credentials not configured in AWSService.`);
