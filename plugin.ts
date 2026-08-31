@@ -9,7 +9,7 @@ import { AWSConfigSchema } from "./schema.ts";
 import tools from "./tools.ts";
 
 const packageConfigSchema = z.object({
-  aws: AWSConfigSchema.exactOptional(),
+  aws: AWSConfigSchema,
 });
 
 export default {
@@ -18,14 +18,12 @@ export default {
   version: packageJSON.version,
   description: packageJSON.description,
   install(app) {
-    app.addService(new AWSService());
+    app.addService(AWSService, new AWSService());
     app.waitForService(ChatService, chatService => chatService.addTools(tools));
     app.waitForService(AgentCommandService, agentCommandService => agentCommandService.addAgentCommands(agentCommands));
   },
   reconfigure(app, config) {
-    if (config.aws) {
-      app.requireService(AWSService).reconfigure(config.aws);
-    }
+    app.requireService(AWSService).reconfigure(config.aws);
   },
   configSchema: packageConfigSchema,
 } satisfies TokenRingPlugin<typeof packageConfigSchema>;

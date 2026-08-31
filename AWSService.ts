@@ -1,11 +1,29 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
-import type Agent from "@tokenring-ai/agent/Agent";
 import type { TokenRingService } from "@tokenring-ai/app/types";
 import { ConfigurationError } from "@tokenring-ai/app/types";
 import type { z } from "zod";
 
 import type { AWSConfigSchema } from "./schema.ts";
+
+export type AWSAccountInfo = {
+  Arn?: string | undefined;
+  Account?: string | undefined;
+  UserId?: string | undefined;
+};
+
+export type AWSServiceStatus =
+  | {
+      active: true;
+      service: string;
+      authenticated: true;
+      accountInfo: AWSAccountInfo;
+    }
+  | {
+      active: true;
+      service: string;
+      authenticated: false;
+    };
 
 /**
  * AWSService provides an interface for interacting with various AWS services.
@@ -94,11 +112,7 @@ export default class AWSService implements TokenRingService {
   }
 
   /** Retrieves the caller identity using AWS STS. */
-  async getCallerIdentity(): Promise<{
-    Arn?: string | undefined;
-    Account?: string | undefined;
-    UserId?: string | undefined;
-  }> {
+  async getCallerIdentity(): Promise<AWSAccountInfo> {
     if (!this.isAuthenticated()) {
       throw new ConfigurationError(this.name, "AWS credentials are not configured.");
     }
@@ -112,13 +126,11 @@ export default class AWSService implements TokenRingService {
     };
   }
 
-  /** Reports the status of the service. */
-  async status(_agent: Agent): Promise<{
-    active: true;
-    service: string;
-    authenticated: boolean;
-    accountInfo?: { Arn?: string | undefined; Account?: string | undefined; UserId?: string | undefined };
-  }> {
+  /** Reports the status of the service without throwing when unauthenticated. */
+  async status(): Promise<AWSServiceStatus> {
+    if (!this.isAuthenticated()) {
+      return { active: true, service: "AWSService", authenticated: false };
+    }
     const identity = await this.getCallerIdentity();
     return {
       active: true,

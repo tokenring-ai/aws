@@ -7,4 +7,6 @@ export const AWSConfigSchema = z
     sessionToken: z.string().exactOptional().meta({ sensitive: true, description: "Temporary session token (STS)" }),
     region: z.string().meta({ description: "Default AWS region (e.g. us-east-1)" }),
   })
-  .strict();
+  .strict()
+  .meta({ description: "AWS configuration options" })
+  .optional();
