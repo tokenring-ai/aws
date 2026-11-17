@@ -15,6 +15,8 @@ command when installed via the plugin system.
 - AWS authentication verification using STS `GetCallerIdentity`
 - Automatic AWS SDK client management with singleton pattern (STS and S3 clients)
 - S3 bucket listing tool for discovering available buckets
+- Configured S3 buckets as an `s3://` remote store: agent tools, the Remote files app, chat
+  attachments and optional `@` search
 - Chat command interface for authentication status checks
 - Generic AWS client initialization via `initializeAWSClient` for extending to
   other AWS services
@@ -93,6 +95,59 @@ Ensure AWS credentials are properly configured in the AWSService with:
 - **region**: Your AWS region (e.g., 'us-east-1')
 - **sessionToken**: Optional AWS Session Token (if using temporary credentials)
 ```
+
+## S3 Buckets as Remote Files
+
+Buckets listed under `aws.s3.buckets` become an `s3://` remote store (`S3Store`, built on Bun's
+built-in `S3Client`, not the AWS SDK), registered with
+`RemoteStoreService` from `@tokenring-ai/filesystem`. They get what every remote store gets:
+
+- the `remote_list`, `remote_read`, `remote_search`, `remote_download` and `remote_upload` agent tools
+- the Remote files app (`/remote`) and "Attach from Amazon S3" in the chat composer
+- optionally, chat `@` search over file names (`contextualSearch: true`)
+
+S3 is not part of the host filesystem, so there is no grep, glob or terminal access. Agents copy an
+object to the host with `remote_download` first.
+
+```yaml
+aws:
+  accessKeyId: AKIAIOSFODNN7EXAMPLE
+  secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  region: us-east-1
+  s3:
+    buckets:
+      team-media:              # bucket name; URLs are s3://team-media/<key>
+        description: Media     # label: "Media · team-media"
+      analytics-exports:
+        prefix: reports/       # only keys under reports/ are reachable
+        region: eu-west-2      # the bucket's region, if not the default
+        writable: true         # allow remote_upload (each upload still asks for approval)
+        contextualSearch: true # include file names in chat @ search
+```
+
+| Field              | Type    | Default | Description                                                                 |
+|:-------------------|:--------|:--------|:----------------------------------------------------------------------------|
+| `description`      | string  | `"S3"`  | Label shown for the bucket                                                  |
+| `prefix`           | string  | `""`    | Root of the mount; keys outside it are refused                              |
+| `region`           | string  | –       | The bucket's region, when it differs from `aws.region`                      |
+| `endpoint`         | string  | –       | S3-compatible endpoint (Cloudflare R2, MinIO, …); omit for Amazon S3        |
+| `writable`         | boolean | `false` | Allow agents to create and replace objects                                  |
+| `contextualSearch` | boolean | `false` | Include this bucket in chat `@` search                                      |
+
+How S3 maps onto the remote store model:
+
+- **URLs** are the familiar `s3://<bucket>/<key>`. Keys ending in `/`, and the bucket root, are folders,
+  as in the S3 console; a key without the slash that has objects under it is also treated as a folder.
+- **Listing** uses `ListObjectsV2` with a `/` delimiter, one page (up to 1,000 entries) at a time. A folder's
+  own placeholder object (`reports/`) is not listed as a file.
+- **Types**: objects stored as `binary/octet-stream` or `application/octet-stream` are typed by extension.
+- **Search** matches file names only, case-insensitively, because S3 has no search API. It walks keys under
+  the mount and stops after 10,000 keys or once it has enough results.
+- **Writes** are `PutObject`: `remote_upload` to a folder URL creates `<folder><name>`, and to a file URL
+  replaces it.
+- **Open in Amazon S3** links go to the S3 console (none for buckets with a custom `endpoint`).
+
+Without credentials (`isAuthenticated()` false) no buckets are mounted.
 
 ## Tools
 
@@ -195,6 +250,7 @@ export default class AWSService implements TokenRingService {
   description = "Provides AWS functionality";
   private stsClient: STSClient | undefined;
   private s3Client: S3Client | undefined;
+  private bucketClients = new Map<string, Bun.S3Client>();
   private options: z.output<typeof AWSConfigSchema> | undefined;
 
   constructor(options?: z.output<typeof AWSConfigSchema>);
@@ -209,11 +265,13 @@ service uses them immediately.
 
 | Method                  | Description                                                                    |
 |:------------------------|:-------------------------------------------------------------------------------|
-| `reconfigure(options)`  | Replaces the stored credentials and resets cached STS/S3 clients to `undefined`. |
+| `reconfigure(options)`  | Replaces the stored credentials and drops the cached STS, SDK S3 and per-bucket clients. |
 | `getRegion()`           | Returns the configured AWS region. Throws `ConfigurationError` if not configured. |
 | `initializeAWSClient<T>(ClientClass, clientConfig?)` | Creates a new AWS SDK client instance using configured credentials. |
 | `getSTSClient()`        | Gets or creates the STS client singleton. Throws `ConfigurationError` if not authenticated. |
-| `getS3Client()`         | Gets or creates the S3 client singleton. Throws `ConfigurationError` if not authenticated. |
+| `getS3Client()`         | Gets or creates the AWS SDK S3 client, used for account-level calls such as `ListBuckets`. Throws `ConfigurationError` if not authenticated. |
+| `getBucketClient(bucket)` | Gets or creates Bun's built-in `S3Client` for one configured bucket (its region and endpoint), cached per bucket. Throws `ConfigurationError` if not authenticated. |
+| `getS3Buckets()`        | The configured `aws.s3.buckets` as `{ bucket, mount }` pairs; empty when not authenticated. |
 | `isAuthenticated()`     | Returns `true` when `accessKeyId`, `secretAccessKey`, and `region` are all set. |
 | `getCallerIdentity()`   | Calls STS `GetCallerIdentity` and returns account info. Throws `ConfigurationError` if not authenticated. |
 | `status()`              | Reports service status as a discriminated union without throwing when unauthenticated. |
@@ -224,9 +282,9 @@ service uses them immediately.
 reconfigure(options: z.output<typeof AWSConfigSchema>): void
 ```
 
-Replaces the stored credential options and resets both cached client singletons
-(`stsClient`, `s3Client`) to `undefined`, so the next call to `getSTSClient()`
-or `getS3Client()` creates fresh clients with the new credentials.
+Replaces the stored credential options and drops the cached STS client, the SDK S3
+client and every per-bucket client, so the next calls create fresh clients with
+the new credentials.
 
 #### `getRegion()`
 
@@ -269,8 +327,30 @@ on first call. Throws `ConfigurationError` if not authenticated.
 getS3Client(): S3Client
 ```
 
-Returns the cached S3 client, creating one via `initializeAWSClient(S3Client)`
-on first call. Throws `ConfigurationError` if not authenticated.
+Returns the cached AWS SDK S3 client, creating one via `initializeAWSClient(S3Client)`
+on first call. Only the `aws_listS3Buckets` tool uses it (Bun's client has no
+`ListBuckets`). Throws `ConfigurationError` if not authenticated.
+
+#### `getBucketClient(bucket)`
+
+```typescript
+getBucketClient(bucket: string): Bun.S3Client
+```
+
+Returns Bun's built-in `S3Client` for one configured bucket, created with the
+configured credentials and the bucket's own `region` and `endpoint` when set, and
+cached per bucket. `S3Store` makes all its calls through it. Throws
+`ConfigurationError` if not authenticated.
+
+#### `getS3Buckets()`
+
+```typescript
+getS3Buckets(): { bucket: string; mount: S3BucketMount }[]
+```
+
+Returns the buckets configured under `aws.s3.buckets`, keyed by bucket name.
+Returns an empty array when credentials are not configured. `S3Store` reads its
+mounts from here.
 
 #### `isAuthenticated()`
 
@@ -330,16 +410,20 @@ wires up tools and commands during `install`, and applies config changes via
 
 **`install(app)`** performs the following steps:
 
-1. Registers `AWSService` on the app via `app.addService(new AWSService())`
+1. Registers `AWSService` on the app via `app.addService(AWSService, awsService)`
    (no constructor arguments — config is applied via `reconfigure`).
 2. Waits for `ChatService` to become available, then registers the
    `aws_listS3Buckets` tool via `chatService.addTools(tools)`.
 3. Waits for `AgentCommandService` to become available, then registers the
    `aws status` command via `agentCommandService.addAgentCommands(agentCommands)`.
+4. Waits for `RemoteStoreService` (from `@tokenring-ai/filesystem`), then registers
+   an `S3Store`, the `s3://` remote store.
 
 **`reconfigure(app, config)`** calls
 `app.requireService(AWSService).reconfigure(config.aws)`, which updates the
-stored credentials and resets cached clients. This enables live credential
+stored credentials and resets cached clients, then
+`RemoteStoreService.mountsChanged()`, so added or removed buckets (and their
+`@` search providers) take effect. This enables live credential
 updates without an app restart.
 
 ### Plugin Installation
@@ -369,7 +453,9 @@ This package does not define RPC endpoints.
 | `@tokenring-ai/app`     | Application framework — `TokenRingPlugin`, `TokenRingService`, `ConfigurationError` |
 | `@tokenring-ai/chat`    | Chat service for tool registration — `TokenRingToolDefinition`, `TokenRingToolResult`, `ToolCallError` |
 | `@tokenring-ai/utility` | String indentation utility (`indent`)              |
-| `@aws-sdk/client-s3`    | S3 service client                                  |
+| `@tokenring-ai/filesystem` | `RemoteStoreService` and the `RemoteStore` interface that `S3Store` implements |
+| `mime-types`            | Types S3 objects by extension when S3 stores them as octet-stream |
+| `@aws-sdk/client-s3`    | `ListBuckets` for the `aws_listS3Buckets` tool (the `s3://` store uses Bun's built-in client) |
 | `@aws-sdk/client-sts`   | STS service client                                 |
 | `zod`                   | Runtime type validation                            |
 
@@ -379,7 +465,12 @@ This package does not define RPC endpoints.
 bun test
 ```
 
-The suite (`test/AWSService.test.ts`) covers the `status()` method: it returns
+`test/S3Store.test.ts` covers the `s3://` store against a fake S3 client: mounts
+and prefixes, folder listing, stat of files, folders and missing keys, reads typed
+by extension, refusing keys outside the prefix, paged name search, create and
+replace, per-bucket clients and console links, and unconfigured buckets.
+
+The suite `test/AWSService.test.ts` covers the `status()` method: it returns
 `authenticated: false` without throwing when credentials are absent, when
 credentials are incomplete, and returns `authenticated: true` with account info
 when credentials are configured (using a mocked `getCallerIdentity`).
